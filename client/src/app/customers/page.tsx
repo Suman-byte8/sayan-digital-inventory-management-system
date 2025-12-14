@@ -304,7 +304,7 @@ export default function CustomersPage() {
 
             {/* Add New Customer Modal */}
             {isModalOpen && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4">
                     <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl flex flex-col max-h-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Modal Header */}
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
