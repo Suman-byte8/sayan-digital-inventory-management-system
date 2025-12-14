@@ -26,7 +26,7 @@ import fs from 'fs';
 
 export const createProduct = async (req: Request, res: Response) => {
     try {
-        const { name, price, inStock, buyingPrice, sellingPrice } = req.body;
+        const { name, price, description, category, stockQuantity } = req.body;
         let imageUrl = '';
 
         const files = (req as any).file;
@@ -44,9 +44,9 @@ export const createProduct = async (req: Request, res: Response) => {
         const newProduct = new Product({
             name,
             price,
-            inStock,
-            buyingPrice,
-            sellingPrice,
+            description,
+            category,
+            stockQuantity,
             imageUrl
         });
         await newProduct.save();

@@ -9,7 +9,8 @@ import {
     MdShoppingCart,
     MdPeople,
     MdBarChart,
-    MdSettings
+    MdSettings,
+    MdDescription
 } from 'react-icons/md';
 
 const Sidebar = () => {
@@ -70,9 +71,29 @@ const Sidebar = () => {
                     <MdPeople className={`text-[20px] ${isActive('/customers') ? '' : 'group-hover:text-slate-900'}`} />
                     <span className={`text-sm font-medium ${isActive('/customers') ? '' : 'group-hover:text-slate-900'}`}>Customers</span>
                 </Link>
-                <Link href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors group">
-                    <MdBarChart className="text-[20px] group-hover:text-slate-900" />
-                    <span className="text-sm font-medium group-hover:text-slate-900">Reports</span>
+                <Link
+                    href="/invoice"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive('/invoice')
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                >
+                    <MdDescription className={`text-[20px] ${isActive('/invoice') ? '' : 'group-hover:text-slate-900'}`} />
+                    <span className={`text-sm font-medium ${isActive('/invoice') ? '' : 'group-hover:text-slate-900'}`}>Invoice</span>
+                </Link>
+
+                <div className="mt-4 mb-1 px-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">System</p>
+                </div>
+                <Link
+                    href="/profile"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive('/profile')
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                >
+                    <MdPeople className={`text-[20px] ${isActive('/profile') ? '' : 'group-hover:text-slate-900'}`} />
+                    <span className={`text-sm font-medium ${isActive('/profile') ? '' : 'group-hover:text-slate-900'}`}>Admin Profile</span>
                 </Link>
             </nav>
 

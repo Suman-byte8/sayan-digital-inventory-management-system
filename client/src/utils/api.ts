@@ -26,3 +26,12 @@ export const createProduct = async (product: FormData | Omit<Product, '_id'>): P
         throw error;
     }
 };
+
+export const deleteProduct = async (id: string): Promise<void> => {
+    try {
+        await axios.delete(`${API_URL}/products/${id}`);
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+    }
+};
