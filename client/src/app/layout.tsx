@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,10 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body className={`${inter.className} font-display bg-background-light text-slate-900 antialiased overflow-hidden`}>
-        <div className="flex h-screen w-full overflow-hidden">
-          <Sidebar />
-          {children}
-        </div>
+        <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
   );
