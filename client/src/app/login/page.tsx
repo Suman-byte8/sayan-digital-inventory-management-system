@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MdPrint, MdVisibility, MdVisibilityOff, MdCheck } from 'react-icons/md';
+import { MdVisibility, MdVisibilityOff, MdCheck } from 'react-icons/md';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -25,10 +26,7 @@ export default function LoginPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-primary/80 to-primary/90"></div>
 
                     <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <MdPrint className="text-3xl" />
-                            <h2 className="text-xl font-bold tracking-tight">PrintManager</h2>
-                        </div>
+                        <Logo size="md" className="mb-6" iconClassName="text-white" textClassName="text-white" />
                         <h1 className="text-3xl font-bold leading-tight mb-3">Streamline Your Print Operations</h1>
                         <p className="text-white/80 text-base">Manage inventory, track orders, and optimize your workflow all in one place.</p>
                     </div>
@@ -160,7 +158,7 @@ export default function LoginPage() {
 
                     {/* Mobile Footer */}
                     <div className="mt-auto pt-8 md:hidden text-center text-xs text-slate-400">
-                        © 2023 PrintManager Inc.
+                        © 2023 Sayan Digital
                     </div>
                 </div>
             </div>
