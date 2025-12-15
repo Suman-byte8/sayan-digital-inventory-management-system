@@ -129,9 +129,9 @@ export default function InvoicePage() {
                                             <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-white">
                                                 <MdPrint className="text-[16px]" />
                                             </div>
-                                            <span className="text-base font-bold tracking-tight text-slate-900">PrintMaster</span>
+                                            <span className="text-base font-bold tracking-tight text-slate-900">Sayan Digital</span>
                                         </div>
-                                        <p className="text-[10px] text-slate-500">123 Printing Press Lane<br />New York, NY 10012<br />contact@printmaster.com</p>
+                                        <p className="text-[10px] text-slate-500">123 Printing Press Lane<br />New York, NY 10012<br />contact@Sayan Digital.com</p>
                                     </div>
                                     <div className="text-right">
                                         <h3 className="text-xl font-bold text-slate-900 mb-0.5">INVOICE</h3>

@@ -89,7 +89,7 @@ export default function SettingsPage() {
                         {/* Fields */}
                         <label className="flex flex-col gap-1.5">
                             <span className="text-xs font-semibold text-slate-900">Shop Name</span>
-                            <input className="rounded-lg border-slate-200 bg-white text-slate-900 h-9 px-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-gray-400" type="text" defaultValue="PrintMaster Downtown" />
+                            <input className="rounded-lg border-slate-200 bg-white text-slate-900 h-9 px-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-gray-400" type="text" defaultValue="Sayan Digital Downtown" />
                         </label>
                         <label className="flex flex-col gap-1.5">
                             <span className="text-xs font-semibold text-slate-900">Tax ID / VAT Number</span>
@@ -117,7 +117,7 @@ export default function SettingsPage() {
                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500">
                                         <MdMail className="text-[16px]" />
                                     </span>
-                                    <input className="w-full rounded-lg border-slate-200 bg-white text-slate-900 h-9 pl-8 pr-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" type="email" defaultValue="hello@printmaster.com" />
+                                    <input className="w-full rounded-lg border-slate-200 bg-white text-slate-900 h-9 pl-8 pr-3 text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" type="email" defaultValue="hello@Sayan Digital.com" />
                                 </div>
                             </label>
                             <label className="flex flex-col gap-1.5">

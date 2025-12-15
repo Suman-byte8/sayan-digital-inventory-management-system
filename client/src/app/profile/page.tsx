@@ -55,7 +55,7 @@ export default function AdminProfilePage() {
                                     </div>
                                 </div>
                                 <h2 className="text-base font-bold text-slate-900">Jane Doe</h2>
-                                <p className="text-xs text-slate-500 mb-2">jane.doe@printmaster.com</p>
+                                <p className="text-xs text-slate-500 mb-2">jane.doe@Sayan Digital.com</p>
                                 <span className="px-2 py-0.5 rounded-full bg-blue-50 text-primary text-[10px] font-bold uppercase tracking-wide border border-blue-100">Super Admin</span>
                             </div>
                             <nav className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -99,7 +99,7 @@ export default function AdminProfilePage() {
                                         <label className="text-xs font-semibold text-slate-900">Email Address</label>
                                         <div className="relative">
                                             <span className="absolute left-2.5 top-2.5 text-slate-400 text-[14px]"><MdMail /></span>
-                                            <input className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-xs cursor-not-allowed" disabled type="email" defaultValue="jane.doe@printmaster.com" />
+                                            <input className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-xs cursor-not-allowed" disabled type="email" defaultValue="jane.doe@Sayan Digital.com" />
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">

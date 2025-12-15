@@ -25,7 +25,7 @@ const Sidebar = () => {
                     <MdPrint className="text-2xl" />
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-base font-bold leading-tight">PrintMaster</h1>
+                    <h1 className="text-base font-bold leading-tight">Sayan Digital</h1>
                     <p className="text-slate-500 text-xs font-normal">Admin Panel</p>
                 </div>
             </div>
