@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
     MdMenu,
     MdChevronRight,
@@ -22,10 +23,64 @@ import {
     MdPerson
 } from 'react-icons/md';
 import { useParams } from 'next/navigation';
+import { fetchCustomerById } from '@/utils/api';
+
+interface Customer {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    company?: string;
+    status: 'Active' | 'Inactive';
+    createdAt: string;
+}
+
+interface Order {
+    _id: string;
+    orderDate: string;
+    totalAmount: number;
+    status: 'pending' | 'completed' | 'cancelled';
+    products: any[];
+}
 
 export default function CustomerProfilePage() {
     const params = useParams();
-    const customerId = params.id;
+    const customerId = params.id as string;
+    const [customer, setCustomer] = useState<Customer | null>(null);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const data = await fetchCustomerById(customerId);
+                setCustomer(data.customer);
+                setOrders(data.orders);
+            } catch (error) {
+                console.error('Error loading customer data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (customerId) loadData();
+    }, [customerId]);
+
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (!customer) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <p className="text-slate-500">Customer not found</p>
+            </div>
+        );
+    }
 
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
@@ -34,19 +89,26 @@ export default function CustomerProfilePage() {
                     {/* Header Section */}
                     <section className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex gap-4 items-center">
-                            <div className="size-16 md:size-20 rounded-lg bg-slate-100 flex items-center justify-center text-2xl font-bold text-slate-400 overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC3ti0HpqNbIi0BSwX-ZZ9hwqUPIa4ECmzMJuEwEYLm4i7502eMYBqO14fKyZ8EapqmTOH1kshwUIFAeYQ3SXEVH9MRs_5MywOKDhuM5h0xLcfehoXBfcsGeqiqVS2-17U7O3hInBYZ6rtZKI6wnm2qjGXLWyE5YPZ6xWGqHPsUazzet7sufFQXwMHb9b8eZ_8EdTmSF864ffB6Ws4VooD7BS-sD4QI9fqZEOY-JZIlCbB5e_Ll5EYvlLk-EgMbAh0_3akuROazqJ4")' }}>
+                            <div className="size-16 md:size-20 rounded-lg bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+                                {customer.name.substring(0, 2).toUpperCase()}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h1 className="text-xl md:text-2xl font-bold text-slate-900">Acme Corp</h1>
-                                    <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-medium border border-green-200">Active</span>
+                                    <h1 className="text-xl md:text-2xl font-bold text-slate-900">{customer.name}</h1>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border ${customer.status === 'Active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                        {customer.status}
+                                    </span>
                                 </div>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-slate-500 text-xs">
-                                    <span className="flex items-center gap-1"><MdBadge className="text-[16px]" /> ID: #{customerId}</span>
+                                    <span className="flex items-center gap-1"><MdBadge className="text-[16px]" /> ID: #{customer._id.substring(0, 8)}</span>
                                     <span className="hidden sm:inline">•</span>
-                                    <span className="flex items-center gap-1"><MdCalendarMonth className="text-[16px]" /> Since Jan 2021</span>
-                                    <span className="hidden sm:inline">•</span>
-                                    <span className="flex items-center gap-1"><MdPerson className="text-[16px]" /> Contact: Sarah Jenkins</span>
+                                    <span className="flex items-center gap-1"><MdCalendarMonth className="text-[16px]" /> Since {new Date(customer.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                    {customer.company && (
+                                        <>
+                                            <span className="hidden sm:inline">•</span>
+                                            <span className="flex items-center gap-1"><MdPerson className="text-[16px]" /> Company: {customer.company}</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -74,7 +136,7 @@ export default function CustomerProfilePage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-500 mb-0.5">Email Address</p>
-                                            <a className="text-xs font-medium text-slate-900 hover:text-primary transition-colors" href="mailto:sarah@acmecorp.com">sarah@acmecorp.com</a>
+                                            <a className="text-xs font-medium text-slate-900 hover:text-primary transition-colors" href={`mailto:${customer.email}`}>{customer.email}</a>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
@@ -83,47 +145,34 @@ export default function CustomerProfilePage() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-500 mb-0.5">Phone Number</p>
-                                            <a className="text-xs font-medium text-slate-900 hover:text-primary transition-colors" href="tel:+15550123456">+1 (555) 012-3456</a>
+                                            <a className="text-xs font-medium text-slate-900 hover:text-primary transition-colors" href={`tel:${customer.phone}`}>{customer.phone}</a>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <div className="bg-blue-50 p-1.5 rounded-lg text-primary">
-                                            <MdLanguage className="text-[16px]" />
+                                    {customer.company && (
+                                        <div className="flex items-start gap-2">
+                                            <div className="bg-blue-50 p-1.5 rounded-lg text-primary">
+                                                <MdLanguage className="text-[16px]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-slate-500 mb-0.5">Company</p>
+                                                <span className="text-xs font-medium text-slate-900">{customer.company}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] text-slate-500 mb-0.5">Website</p>
-                                            <a className="text-xs font-medium text-slate-900 hover:text-primary transition-colors" href="#">www.acmecorp.com</a>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="font-bold text-sm text-slate-900">Addresses</h3>
-                                    <button className="text-primary text-[10px] font-bold hover:underline">MANAGE</button>
+                                    <h3 className="font-bold text-sm text-slate-900">Address</h3>
                                 </div>
                                 <div className="space-y-3">
                                     <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className="flex items-center gap-1.5 mb-1.5">
                                             <MdLocalShipping className="text-slate-500 text-[16px]" />
-                                            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Shipping</span>
+                                            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Billing & Shipping</span>
                                         </div>
-                                        <p className="text-xs text-slate-900 leading-relaxed">
-                                            Acme Corp HQ<br />
-                                            123 Business Park Dr.<br />
-                                            Suite 400<br />
-                                            San Francisco, CA 94107
-                                        </p>
-                                    </div>
-                                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                                        <div className="flex items-center gap-1.5 mb-1.5">
-                                            <MdReceiptLong className="text-slate-500 text-[16px]" />
-                                            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Billing</span>
-                                        </div>
-                                        <p className="text-xs text-slate-900 leading-relaxed">
-                                            Acme Corp Finance Dept.<br />
-                                            PO Box 8892<br />
-                                            San Francisco, CA 94120
+                                        <p className="text-xs text-slate-900 leading-relaxed whitespace-pre-line">
+                                            {customer.address}
                                         </p>
                                     </div>
                                 </div>
@@ -138,8 +187,6 @@ export default function CustomerProfilePage() {
                                         <h3 className="font-bold text-sm text-slate-900">Order History</h3>
                                         <div className="hidden sm:flex bg-slate-50 rounded-lg p-0.5">
                                             <button className="px-2 py-0.5 bg-white shadow-sm rounded text-[10px] font-medium text-slate-900">All Orders</button>
-                                            <button className="px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 hover:text-slate-900">Pending</button>
-                                            <button className="px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 hover:text-slate-900">Completed</button>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1.5">
@@ -157,125 +204,36 @@ export default function CustomerProfilePage() {
                                             <tr className="bg-slate-50 border-b border-slate-100">
                                                 <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
                                                 <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                                                <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Job Name</th>
                                                 <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                                                 <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
                                                 <th className="py-2 px-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            <tr className="hover:bg-slate-50 transition-colors group">
-                                                <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-2024-051</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">Oct 24, 2023</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded bg-slate-100 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAuMqPO7L1rsxud--NJHtJgoVDmnJovGD9D60w151gvvdfke3BiUQMVxsFp7S3kIKh3cnGtk3X0A-Djz9VV6bMdzokph4BYhY7fvEkUKK0tgaAbsamWfIAbeHEkbcDk9_KZ2tOTSU8jNrT7Ou5S4wl2hG1hpT72k95JR6L9bz1MlqJHLk0TMqHf4NF3tKxAcdeWuuDZTgtJXcbeibsmtSXdnUf0HI2Evcu47jVaZ7U7WO2_2YaIZFksyd2HRPqORBILwK3fz8tn6Xo")' }}></div>
-                                                        <span>Q4 Business Cards</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
-                                                        <span className="size-1 rounded-full bg-amber-500"></span>
-                                                        Processing
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">$450.00</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <button className="text-slate-500 hover:text-primary transition-colors">
-                                                        <MdVisibility className="text-[18px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr className="hover:bg-slate-50 transition-colors group">
-                                                <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-2024-048</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">Oct 12, 2023</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded bg-slate-100 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAh8CIq0Jjh-YGZFl3XMxtoFBU5qBbCcaG_iLyLG0eWo-YX__zkrWHfa2ugHExA_CyqAZppLo9OlhJt2OrO4n1eFcEjy7jjoQkVdz2uefNZ0hhf82OefM7VuYpb0xmOvmJpzbVxQnXgqEE2bGQk8-t_jnh6LX7dmqanfiA9PTNHoIZhPAzeIsYeinuyO2ge2n7kcS3XofoH5iAMLNBcYmfnoUWg0EexrbiFvVeBYIL58COk4a9SXV0biCZs5bTvVuz6GHACSv8RLuQ")' }}></div>
-                                                        <span>Marketing Flyers (5000x)</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800 border border-green-200">
-                                                        <span className="size-1 rounded-full bg-green-500"></span>
-                                                        Shipped
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">$1,250.00</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <button className="text-slate-500 hover:text-primary transition-colors">
-                                                        <MdVisibility className="text-[18px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr className="hover:bg-slate-50 transition-colors group">
-                                                <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-2024-035</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">Sep 28, 2023</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded bg-slate-100 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeBADDUFrTk0KAiISTVhEg_sGGXS7j6mz6bIwdDcrvbR1UHXwSDcXGRwqps70ePR_KwtM4mzgxWGhkAKbVFhCQZFtLLMgtwyEt6Vkc_NyMJB2MhVr7jBHM2MpKzC-vsJ41P2aBuA72zTegCGmtuhe6tj7oGG1IB5LmKDWsaIdXm12WU7c-mqkPL2KeyvUkCfVk_HQL9GK3l44LYhelx2Q6CTYO7tEKdNnpeiBdgL6-cl4FmRBa8BvqN5pwddySumhEj3LUY6J1qo4")' }}></div>
-                                                        <span>Event Banners</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800 border border-green-200">
-                                                        <span className="size-1 rounded-full bg-green-500"></span>
-                                                        Delivered
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">$890.00</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <button className="text-slate-500 hover:text-primary transition-colors">
-                                                        <MdVisibility className="text-[18px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr className="hover:bg-slate-50 transition-colors group">
-                                                <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-2024-022</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">Sep 15, 2023</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded bg-slate-100 flex items-center justify-center text-slate-400">
-                                                            <MdImage className="text-[16px]" />
-                                                        </div>
-                                                        <span>Stickers Roll</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 border border-slate-200">
-                                                        <span className="size-1 rounded-full bg-slate-500"></span>
-                                                        Draft
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">$120.00</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <button className="text-slate-500 hover:text-primary transition-colors">
-                                                        <MdEdit className="text-[18px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr className="hover:bg-slate-50 transition-colors group">
-                                                <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-2024-010</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">Aug 30, 2023</td>
-                                                <td className="py-3 px-4 text-xs text-slate-900">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded bg-slate-100 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCi7U4FQ0BmmtBkOo6zUIw28TNUpvwSlUzB3p_p-7JibLKbQ_LO16FMrhNN7dWeWQlDZuGoXUuI9oG_MVmZB63VLCHSAzSJTq9fxI06kz-BFwTLy83zWCBbC1wN73TMuXb8pqL-rrnsesjWNsi48mzefcTxts0oRIY-W0eM6A9Px1pUfwMYgsJitFAmneOPB4ze5_iUTcjLeZ1UK0OdrI7obVjHQI2C8yKrAIzyE66MNQctX924_FjQgDG-SmIzvRIiU5Q8qotbUBE")' }}></div>
-                                                        <span>Quarterly Brochure</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800 border border-red-200">
-                                                        <span className="size-1 rounded-full bg-red-500"></span>
-                                                        Cancelled
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">$0.00</td>
-                                                <td className="py-3 px-4 text-right">
-                                                    <button className="text-slate-500 hover:text-primary transition-colors">
-                                                        <MdVisibility className="text-[18px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                            {orders.length > 0 ? (
+                                                orders.map((order) => (
+                                                    <tr key={order._id} className="hover:bg-slate-50 transition-colors group">
+                                                        <td className="py-3 px-4 text-xs font-medium text-primary cursor-pointer hover:underline">#ORD-{order._id.substring(order._id.length - 6).toUpperCase()}</td>
+                                                        <td className="py-3 px-4 text-xs text-slate-900">{new Date(order.orderDate).toLocaleDateString()}</td>
+                                                        <td className="py-3 px-4">
+                                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${order.status === 'completed' ? 'bg-green-100 text-green-800 border-green-200' : order.status === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
+                                                                <span className={`size-1 rounded-full ${order.status === 'completed' ? 'bg-green-500' : order.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'}`}></span>
+                                                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-xs font-medium text-slate-900 text-right">${order.totalAmount.toFixed(2)}</td>
+                                                        <td className="py-3 px-4 text-right">
+                                                            <button className="text-slate-500 hover:text-primary transition-colors">
+                                                                <MdVisibility className="text-[18px]" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={5} className="py-8 text-center text-slate-500 text-xs">No orders found for this customer.</td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>

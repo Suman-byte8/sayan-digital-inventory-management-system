@@ -10,10 +10,26 @@ export const getCustomers = async (req: Request, res: Response) => {
     }
 };
 
+export const getCustomerById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const customer = await Customer.findById(id);
+        if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+        // Fetch orders for this customer
+        const Order = (await import('../models/Order')).default;
+        const orders = await Order.find({ customer: id }).sort({ orderDate: -1 });
+
+        res.json({ customer, orders });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching customer', error });
+    }
+};
+
 export const createCustomer = async (req: Request, res: Response) => {
     try {
-        const { name, email, phone, address } = req.body;
-        const customer = new Customer({ name, email, phone, address });
+        const { name, email, phone, address, company, status } = req.body;
+        const customer = new Customer({ name, email, phone, address, company, status });
         await customer.save();
         res.status(201).json(customer);
     } catch (error) {

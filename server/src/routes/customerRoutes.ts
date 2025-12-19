@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../controllers/customerController';
+import { getCustomers, createCustomer, updateCustomer, deleteCustomer, getCustomerById } from '../controllers/customerController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -9,6 +9,7 @@ router.route('/')
     .post(protect, createCustomer);
 
 router.route('/:id')
+    .get(protect, getCustomerById)
     .put(protect, updateCustomer)
     .delete(protect, deleteCustomer);
 

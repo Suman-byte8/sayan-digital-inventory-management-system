@@ -137,6 +137,19 @@ export const fetchCustomers = async (): Promise<any[]> => {
     }
 };
 
+export const fetchCustomerById = async (id: string): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/customers/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching customer:', error);
+        throw error;
+    }
+};
+
 export const createCustomer = async (customer: any): Promise<any> => {
     try {
         const token = localStorage.getItem('token');
@@ -146,6 +159,31 @@ export const createCustomer = async (customer: any): Promise<any> => {
         return response.data;
     } catch (error) {
         console.error('Error creating customer:', error);
+        throw error;
+    }
+};
+
+export const updateCustomer = async (id: string, customer: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/customers/${id}`, customer, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating customer:', error);
+        throw error;
+    }
+};
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_URL}/customers/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch (error) {
+        console.error('Error deleting customer:', error);
         throw error;
     }
 };

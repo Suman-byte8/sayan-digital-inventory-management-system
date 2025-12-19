@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchCustomers, createCustomer } from '@/utils/api';
+import { fetchCustomers, createCustomer, updateCustomer, deleteCustomer as apiDeleteCustomer } from '@/utils/api';
 import {
     MdChevronRight,
     MdAdd,
@@ -30,15 +30,16 @@ interface Customer {
     company: string;
     email: string;
     phone: string;
+    address: string;
     lastOrder: string;
     totalDue: number;
     status: 'Active' | 'Inactive';
 }
 
-
-
 export default function CustomersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -47,6 +48,7 @@ export default function CustomersPage() {
         company: '',
         email: '',
         phone: '',
+        address: '',
         status: 'Active',
         initials: '',
         initialsColor: 'text-blue-600 bg-blue-100',
@@ -54,25 +56,25 @@ export default function CustomersPage() {
         totalDue: 0
     });
 
+    const loadCustomers = async () => {
+        const data = await fetchCustomers();
+        const mappedCustomers = data.map((c: any) => ({
+            id: c._id,
+            name: c.name,
+            initials: c.name.substring(0, 2).toUpperCase(),
+            initialsColor: 'text-blue-600 bg-blue-100',
+            company: c.company || 'N/A',
+            email: c.email,
+            phone: c.phone,
+            address: c.address || '',
+            lastOrder: 'N/A',
+            totalDue: 0,
+            status: c.status || 'Active'
+        }));
+        setCustomers(mappedCustomers);
+    };
+
     useEffect(() => {
-        const loadCustomers = async () => {
-            const data = await fetchCustomers();
-            // Map API data to UI format if needed, or adjust UI to match API
-            // For now assuming API returns compatible data or mapping is simple
-            const mappedCustomers = data.map((c: any) => ({
-                id: c._id,
-                name: c.name,
-                initials: c.name.substring(0, 2).toUpperCase(),
-                initialsColor: 'text-blue-600 bg-blue-100', // Randomize if needed
-                company: 'N/A', // Add to schema if needed
-                email: c.email,
-                phone: c.phone,
-                lastOrder: 'N/A',
-                totalDue: 0,
-                status: 'Active' as 'Active' | 'Inactive'
-            }));
-            setCustomers(mappedCustomers);
-        };
         loadCustomers();
     }, []);
 
@@ -83,50 +85,81 @@ export default function CustomersPage() {
         }
 
         try {
-            const savedCustomer = await createCustomer({
-                name: newCustomer.name,
-                email: newCustomer.email,
-                phone: newCustomer.phone,
-                address: 'N/A' // Add address field to UI if needed
-            });
+            if (isEditMode && editingCustomerId) {
+                await updateCustomer(editingCustomerId, {
+                    name: newCustomer.name,
+                    email: newCustomer.email,
+                    phone: newCustomer.phone,
+                    address: newCustomer.address,
+                    company: newCustomer.company,
+                    status: newCustomer.status
+                });
+            } else {
+                await createCustomer({
+                    name: newCustomer.name,
+                    email: newCustomer.email,
+                    phone: newCustomer.phone,
+                    address: newCustomer.address,
+                    company: newCustomer.company,
+                    status: newCustomer.status
+                });
+            }
 
-            const customerToAdd: Customer = {
-                id: savedCustomer._id,
-                name: savedCustomer.name,
-                company: 'N/A',
-                email: savedCustomer.email,
-                phone: savedCustomer.phone,
-                lastOrder: 'Just now',
-                totalDue: 0,
-                status: 'Active',
-                initials: savedCustomer.name.substring(0, 2).toUpperCase(),
-                initialsColor: 'text-blue-600 bg-blue-100'
-            };
-
-            setCustomers([customerToAdd, ...customers]);
-            setIsModalOpen(false);
-            setNewCustomer({
-                name: '',
-                company: '',
-                email: '',
-                phone: '',
-                status: 'Active',
-                initials: '',
-                initialsColor: 'text-blue-600 bg-blue-100',
-                lastOrder: 'N/A',
-                totalDue: 0
-            });
+            await loadCustomers();
+            handleCloseModal();
         } catch (error) {
-            alert('Error creating customer');
+            alert(`Error ${isEditMode ? 'updating' : 'creating'} customer`);
         }
+    };
+
+    const handleEditClick = (customer: Customer) => {
+        setNewCustomer({
+            name: customer.name,
+            company: customer.company === 'N/A' ? '' : customer.company,
+            email: customer.email,
+            phone: customer.phone,
+            address: customer.address,
+            status: customer.status,
+            initials: customer.initials,
+            initialsColor: customer.initialsColor,
+            lastOrder: customer.lastOrder,
+            totalDue: customer.totalDue
+        });
+        setEditingCustomerId(customer.id);
+        setIsEditMode(true);
+        setIsModalOpen(true);
+        setActiveDropdown(null);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setIsEditMode(false);
+        setEditingCustomerId(null);
+        setNewCustomer({
+            name: '',
+            company: '',
+            email: '',
+            phone: '',
+            address: '',
+            status: 'Active',
+            initials: '',
+            initialsColor: 'text-blue-600 bg-blue-100',
+            lastOrder: 'N/A',
+            totalDue: 0
+        });
     };
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-    const handleDeleteCustomer = (id: string) => {
+    const handleDeleteCustomer = async (id: string) => {
         if (confirm('Are you sure you want to delete this customer?')) {
-            setCustomers(customers.filter(c => c.id !== id));
-            setActiveDropdown(null);
+            try {
+                await apiDeleteCustomer(id);
+                setCustomers(customers.filter(c => c.id !== id));
+                setActiveDropdown(null);
+            } catch (error) {
+                alert('Error deleting customer');
+            }
         }
     };
 
@@ -265,10 +298,7 @@ export default function CustomersPage() {
                                                             <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-slate-100 z-10 py-1 animate-in fade-in zoom-in-95 duration-100">
                                                                 <button
                                                                     className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                                                    onClick={() => {
-                                                                        alert('Edit functionality coming soon');
-                                                                        setActiveDropdown(null);
-                                                                    }}
+                                                                    onClick={() => handleEditClick(customer)}
                                                                 >
                                                                     <MdEdit className="text-[14px]" />
                                                                     Edit
@@ -302,18 +332,18 @@ export default function CustomersPage() {
                 </div>
             </div>
 
-            {/* Add New Customer Modal */}
+            {/* Add/Edit Customer Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4">
                     <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl flex flex-col max-h-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Modal Header */}
                         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900">Add New Customer</h3>
-                                <p className="text-xs text-slate-500 mt-0.5">Enter customer details to create a new profile.</p>
+                                <h3 className="text-lg font-bold text-slate-900">{isEditMode ? 'Edit Customer' : 'Add New Customer'}</h3>
+                                <p className="text-xs text-slate-500 mt-0.5">{isEditMode ? 'Update customer details.' : 'Enter customer details to create a new profile.'}</p>
                             </div>
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={handleCloseModal}
                                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <MdClose className="text-[20px]" />
@@ -398,13 +428,37 @@ export default function CustomersPage() {
                                         <textarea
                                             className="w-full pl-9 pr-3 py-2.5 min-h-[100px] rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all resize-y"
                                             placeholder="Enter full billing address..."
+                                            value={newCustomer.address}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                                         ></textarea>
                                     </div>
                                 </label>
 
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" id="tax-exempt" className="rounded border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5" />
-                                    <label htmlFor="tax-exempt" className="text-[10px] font-medium text-slate-700 cursor-pointer">This customer is tax exempt</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="status-active"
+                                            name="status"
+                                            value="Active"
+                                            checked={newCustomer.status === 'Active'}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, status: 'Active' })}
+                                            className="rounded-full border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5"
+                                        />
+                                        <label htmlFor="status-active" className="text-[10px] font-medium text-slate-700 cursor-pointer">Active</label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            id="status-inactive"
+                                            name="status"
+                                            value="Inactive"
+                                            checked={newCustomer.status === 'Inactive'}
+                                            onChange={(e) => setNewCustomer({ ...newCustomer, status: 'Inactive' })}
+                                            className="rounded-full border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5"
+                                        />
+                                        <label htmlFor="status-inactive" className="text-[10px] font-medium text-slate-700 cursor-pointer">Inactive</label>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -412,7 +466,7 @@ export default function CustomersPage() {
                         {/* Modal Footer */}
                         <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={handleCloseModal}
                                 className="px-5 h-9 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
                             >
                                 Cancel
@@ -422,7 +476,7 @@ export default function CustomersPage() {
                                 className="px-5 h-9 rounded-lg bg-primary text-white text-xs font-bold hover:bg-blue-700 shadow-sm shadow-blue-500/20 transition-all flex items-center gap-2"
                             >
                                 <MdSave className="text-[16px]" />
-                                Save Customer
+                                {isEditMode ? 'Update Customer' : 'Save Customer'}
                             </button>
                         </div>
                     </div>
