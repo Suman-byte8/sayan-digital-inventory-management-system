@@ -39,15 +39,6 @@ export const fetchProducts = async (): Promise<Product[]> => {
 
 export const createProduct = async (product: FormData | Omit<Product, '_id'>): Promise<Product> => {
     try {
-        console.log('--- API: Sending Product Request ---');
-        if (product instanceof FormData) {
-            console.log('Data is FormData');
-            // FormData content cannot be easily logged directly in all browsers without iteration, 
-            // but we logged it in the component.
-        } else {
-            console.log('Data is JSON:', product);
-        }
-
         const response = await axios.post(`${API_URL}/products`, product, {
             headers: {
                 ...(product instanceof FormData ? {} : { 'Content-Type': 'application/json' }),

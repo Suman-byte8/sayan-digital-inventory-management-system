@@ -24,7 +24,6 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     // Manually parse CLOUDINARY_URL to ensure it works even if SDK auto-detection fails
     try {
         const url = process.env.CLOUDINARY_URL;
-        console.log('Raw CLOUDINARY_URL found:', url.substring(0, 20) + '...');
         if (url.startsWith('cloudinary://')) {
             const [credentials, cName] = url.replace('cloudinary://', '').split('@');
             const [key, secret] = credentials.split(':');
@@ -53,14 +52,6 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
 
 export const uploadToCloudinary = async (filePath: string): Promise<string> => {
     try {
-        // Debug: Check config before upload
-        const currentConfig = cloudinary.config();
-        console.log('Cloudinary Config State:', {
-            cloud_name: currentConfig.cloud_name,
-            api_key: currentConfig.api_key,
-            has_secret: !!currentConfig.api_secret
-        });
-
         const result = await cloudinary.uploader.upload(filePath, {
             folder: 'inventory_products',
             // Explicitly pass credentials as fallback

@@ -133,12 +133,6 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
                 data.append('image', imageFile);
             }
 
-            // Debug: Log FormData entries
-            console.log('--- Frontend: Submitting Product ---');
-            for (let [key, value] of data.entries()) {
-                console.log(`${key}:`, value);
-            }
-
             await createProduct(data);
             onProductAdded();
             onClose();

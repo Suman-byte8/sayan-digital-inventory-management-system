@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MdClose, MdExpandMore } from 'react-icons/md';
+import { useState, useEffect, useRef } from 'react';
+import { MdClose, MdExpandMore, MdCloudUpload, MdDelete } from 'react-icons/md';
 import { updateProduct, fetchCategories, Category } from '@/utils/api';
 import { Product } from './InventoryTable';
 
@@ -24,6 +24,9 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -45,6 +48,13 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
                 sellingPrice: String(product.sellingPrice ?? ''),
                 inStock: product.inStock,
             });
+            // Set initial preview from existing product image
+            if (product.imageUrl) {
+                setImagePreview(product.imageUrl);
+            } else {
+                setImagePreview(null);
+            }
+            setImageFile(null); // Reset file input
         } else {
             setFormData({
                 name: '',
@@ -54,8 +64,19 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
                 sellingPrice: '',
                 inStock: true,
             });
+            setImagePreview(null);
+            setImageFile(null);
         }
     }, [product]);
+
+    // Clean up object URL to avoid memory leaks
+    useEffect(() => {
+        return () => {
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview);
+            }
+        };
+    }, [imagePreview]);
 
     if (!isOpen || !product) return null;
 
@@ -64,9 +85,49 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFile = (file: File) => {
+        if (file && file.type.startsWith('image/')) {
+            setImageFile(file);
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+        }
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setImageFile(e.target.files[0]);
+            handleFile(e.target.files[0]);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        if (e.clipboardData.files && e.clipboardData.files[0]) {
+            handleFile(e.clipboardData.files[0]);
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
@@ -98,7 +159,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onPaste={handlePaste}>
             {/* Modal Backdrop / Overlay */}
             <div
                 aria-hidden="true"
@@ -140,17 +201,61 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditPr
                         </div>
                     </div>
 
-                    {/* Image Upload */}
+                    {/* Image Upload (Drag & Drop) */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium leading-6 text-slate-900" htmlFor="product-image">Product Image</label>
-                        <input
-                            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                            id="product-image"
-                            name="image"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                        />
+                        <label className="block text-sm font-medium leading-6 text-slate-900">Product Image</label>
+
+                        {!imagePreview ? (
+                            <div
+                                className={`mt-1 flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors cursor-pointer ${isDragging
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <div className="text-center">
+                                    <MdCloudUpload className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
+                                    <div className="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
+                                        <span className="relative cursor-pointer rounded-md bg-white font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:text-primary-dark">
+                                            <span>Upload a file</span>
+                                            <input
+                                                id="file-upload"
+                                                name="file-upload"
+                                                type="file"
+                                                className="sr-only"
+                                                ref={fileInputRef}
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                            />
+                                        </span>
+                                        <p className="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
+                                    <p className="text-xs leading-5 text-gray-400 mt-1">Or paste (Ctrl+V) directly</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="relative mt-2 rounded-lg border border-gray-200 overflow-hidden group">
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-full h-48 object-contain bg-gray-50"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={removeImage}
+                                        className="p-2 bg-white rounded-full text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                        title="Remove image"
+                                    >
+                                        <MdDelete className="text-xl" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Category Dropdown */}
