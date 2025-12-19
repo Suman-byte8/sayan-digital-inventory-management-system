@@ -29,16 +29,23 @@ export const createProduct = async (req: Request, res: Response) => {
         const { name, description, category, buyingPrice, sellingPrice, inStock } = req.body;
         let imageUrl = '';
 
+        console.log('Request Body:', req.body);
         const files = (req as any).file;
+        console.log('Request File:', files);
+
         if (files) {
             try {
+                console.log('Uploading file to Cloudinary...');
                 imageUrl = await uploadToCloudinary(files.path);
+                console.log('Cloudinary Upload Success. URL:', imageUrl);
                 // Clean up local file after upload
                 fs.unlinkSync(files.path);
             } catch (uploadError) {
                 console.error('Error uploading image:', uploadError);
                 // Continue without image or handle error as needed
             }
+        } else {
+            console.log('No file received in request.');
         }
 
         const newProduct = new Product({
@@ -51,6 +58,7 @@ export const createProduct = async (req: Request, res: Response) => {
             imageUrl
         });
         await newProduct.save();
+        console.log('Product saved with Image URL:', newProduct.imageUrl);
         res.status(201).json(newProduct);
     } catch (error) {
         // Clean up file if it exists and error occurred before upload completion
