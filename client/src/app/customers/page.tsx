@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchCustomers, createCustomer } from '@/utils/api';
 import {
     MdChevronRight,
     MdAdd,
@@ -34,36 +35,11 @@ interface Customer {
     status: 'Active' | 'Inactive';
 }
 
-const initialCustomers: Customer[] = [
-    {
-        id: '1',
-        name: 'John Doe',
-        initials: 'JD',
-        initialsColor: 'text-blue-600 bg-blue-100',
-        company: 'Acme Corp',
-        email: 'john@acme.com',
-        phone: '+1 (555) 123-4567',
-        lastOrder: 'Oct 24, 2023',
-        totalDue: 1200.00,
-        status: 'Active'
-    },
-    {
-        id: '2',
-        name: 'Sarah Jenkins',
-        initials: 'SJ',
-        initialsColor: 'text-purple-600 bg-purple-100',
-        company: 'Freelancer',
-        email: 'sarah.j@gmail.com',
-        phone: '+1 (555) 987-6543',
-        lastOrder: 'Oct 20, 2023',
-        totalDue: 0.00,
-        status: 'Inactive'
-    }
-];
+
 
 export default function CustomersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+    const [customers, setCustomers] = useState<Customer[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
@@ -78,47 +54,71 @@ export default function CustomersPage() {
         totalDue: 0
     });
 
-    const handleSaveCustomer = () => {
+    useEffect(() => {
+        const loadCustomers = async () => {
+            const data = await fetchCustomers();
+            // Map API data to UI format if needed, or adjust UI to match API
+            // For now assuming API returns compatible data or mapping is simple
+            const mappedCustomers = data.map((c: any) => ({
+                id: c._id,
+                name: c.name,
+                initials: c.name.substring(0, 2).toUpperCase(),
+                initialsColor: 'text-blue-600 bg-blue-100', // Randomize if needed
+                company: 'N/A', // Add to schema if needed
+                email: c.email,
+                phone: c.phone,
+                lastOrder: 'N/A',
+                totalDue: 0,
+                status: 'Active' as 'Active' | 'Inactive'
+            }));
+            setCustomers(mappedCustomers);
+        };
+        loadCustomers();
+    }, []);
+
+    const handleSaveCustomer = async () => {
         if (!newCustomer.name || !newCustomer.email) {
             alert('Please fill in at least Name and Email');
             return;
         }
 
-        const initials = newCustomer.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        const colors = [
-            'text-blue-600 bg-blue-100',
-            'text-purple-600 bg-purple-100',
-            'text-green-600 bg-green-100',
-            'text-orange-600 bg-orange-100'
-        ];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        try {
+            const savedCustomer = await createCustomer({
+                name: newCustomer.name,
+                email: newCustomer.email,
+                phone: newCustomer.phone,
+                address: 'N/A' // Add address field to UI if needed
+            });
 
-        const customerToAdd: Customer = {
-            id: Date.now().toString(),
-            name: newCustomer.name || '',
-            company: newCustomer.company || '',
-            email: newCustomer.email || '',
-            phone: newCustomer.phone || '',
-            lastOrder: 'Just now',
-            totalDue: 0,
-            status: 'Active',
-            initials: initials,
-            initialsColor: randomColor
-        };
+            const customerToAdd: Customer = {
+                id: savedCustomer._id,
+                name: savedCustomer.name,
+                company: 'N/A',
+                email: savedCustomer.email,
+                phone: savedCustomer.phone,
+                lastOrder: 'Just now',
+                totalDue: 0,
+                status: 'Active',
+                initials: savedCustomer.name.substring(0, 2).toUpperCase(),
+                initialsColor: 'text-blue-600 bg-blue-100'
+            };
 
-        setCustomers([customerToAdd, ...customers]);
-        setIsModalOpen(false);
-        setNewCustomer({
-            name: '',
-            company: '',
-            email: '',
-            phone: '',
-            status: 'Active',
-            initials: '',
-            initialsColor: 'text-blue-600 bg-blue-100',
-            lastOrder: 'N/A',
-            totalDue: 0
-        });
+            setCustomers([customerToAdd, ...customers]);
+            setIsModalOpen(false);
+            setNewCustomer({
+                name: '',
+                company: '',
+                email: '',
+                phone: '',
+                status: 'Active',
+                initials: '',
+                initialsColor: 'text-blue-600 bg-blue-100',
+                lastOrder: 'N/A',
+                totalDue: 0
+            });
+        } catch (error) {
+            alert('Error creating customer');
+        }
     };
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);

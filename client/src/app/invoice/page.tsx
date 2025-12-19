@@ -12,7 +12,19 @@ import {
     MdReceiptLong
 } from 'react-icons/md';
 
+import { useState, useEffect } from 'react';
+import { fetchInvoices } from '@/utils/api';
+
 export default function InvoicePage() {
+    const [invoices, setInvoices] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadInvoices = async () => {
+            const data = await fetchInvoices();
+            setInvoices(data);
+        };
+        loadInvoices();
+    }, []);
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
             {/* Top Navigation / Breadcrumbs */}
@@ -142,10 +154,10 @@ export default function InvoicePage() {
                                 {/* Bill To Section */}
                                 <div className="mb-5 p-2.5 bg-slate-50 rounded border border-slate-100">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Bill To</p>
-                                    <h4 className="text-xs font-bold text-slate-900">Acme Printing Co.</h4>
-                                    <p className="text-[10px] text-slate-600">billing@acme.com</p>
-                                    <p className="text-[10px] text-slate-600">+1 (555) 000-0000</p>
-                                    <p className="text-[10px] text-slate-600">123 Main St, City, Country</p>
+                                    <h4 className="text-xs font-bold text-slate-900">Customer Name</h4>
+                                    <p className="text-[10px] text-slate-600">email@example.com</p>
+                                    <p className="text-[10px] text-slate-600">+1 (000) 000-0000</p>
+                                    <p className="text-[10px] text-slate-600">Billing Address</p>
                                 </div>
                                 {/* Items Table */}
                                 <div className="overflow-x-auto mb-5">
@@ -160,34 +172,9 @@ export default function InvoicePage() {
                                             </tr>
                                         </thead>
                                         <tbody className="text-[10px] text-slate-700">
-                                            {/* Item 1 */}
-                                            <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
-                                                <td className="py-2.5 px-2">
-                                                    <p className="font-medium text-slate-900">Premium Glossy Paper (A4)</p>
-                                                    <p className="text-[9px] text-slate-500">500 sheets pack</p>
-                                                </td>
-                                                <td className="py-2.5 px-2 text-right tabular-nums">2</td>
-                                                <td className="py-2.5 px-2 text-right tabular-nums">$15.00</td>
-                                                <td className="py-2.5 px-2 text-right font-medium tabular-nums">$30.00</td>
-                                                <td className="py-2.5 px-2 text-center">
-                                                    <button className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <MdDelete className="text-[14px]" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            {/* Item 2 */}
-                                            <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
-                                                <td className="py-2.5 px-2">
-                                                    <p className="font-medium text-slate-900">Business Cards Printing</p>
-                                                    <p className="text-[9px] text-slate-500">Matte Finish, Double Sided</p>
-                                                </td>
-                                                <td className="py-2.5 px-2 text-right tabular-nums">1000</td>
-                                                <td className="py-2.5 px-2 text-right tabular-nums">$0.08</td>
-                                                <td className="py-2.5 px-2 text-right font-medium tabular-nums">$80.00</td>
-                                                <td className="py-2.5 px-2 text-center">
-                                                    <button className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <MdDelete className="text-[14px]" />
-                                                    </button>
+                                            <tr className="border-b border-slate-100">
+                                                <td colSpan={5} className="py-4 text-center text-slate-400 italic">
+                                                    No items added yet
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -198,15 +185,15 @@ export default function InvoicePage() {
                                     <div className="w-full max-w-[200px] space-y-1.5">
                                         <div className="flex justify-between text-[10px] text-slate-600">
                                             <span>Subtotal</span>
-                                            <span className="font-medium tabular-nums">$110.00</span>
+                                            <span className="font-medium tabular-nums">$0.00</span>
                                         </div>
                                         <div className="flex justify-between text-[10px] text-slate-600">
                                             <span>Tax (10%)</span>
-                                            <span className="font-medium tabular-nums">$11.00</span>
+                                            <span className="font-medium tabular-nums">$0.00</span>
                                         </div>
                                         <div className="pt-1.5 border-t border-slate-200 flex justify-between items-center">
                                             <span className="text-xs font-bold text-slate-900">Grand Total</span>
-                                            <span className="text-sm font-bold text-primary tabular-nums">$121.00</span>
+                                            <span className="text-sm font-bold text-primary tabular-nums">$0.00</span>
                                         </div>
                                     </div>
                                 </div>

@@ -3,6 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import productRoutes from './routes/productRoutes';
+import categoryRoutes from './routes/categoryRoutes';
+import authRoutes from './routes/authRoutes';
+import customerRoutes from './routes/customerRoutes';
+import orderRoutes from './routes/orderRoutes';
+import invoiceRoutes from './routes/invoiceRoutes';
 
 dotenv.config();
 
@@ -14,6 +19,11 @@ app.use(express.json());
 
 // Routes
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

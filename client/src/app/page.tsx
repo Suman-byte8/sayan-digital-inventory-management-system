@@ -1,11 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchOrders } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
 import { MdCalendarToday, MdNotifications, MdAdd, MdPayments, MdTrendingUp, MdPendingActions, MdWarning, MdPrint, MdShoppingCart, MdInventory, MdPersonAdd } from 'react-icons/md';
 
 export default function Dashboard() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadRecentOrders = async () => {
+      try {
+        const data = await fetchOrders();
+        setRecentOrders(data.slice(0, 5)); // Get top 5
+      } catch (error) {
+        console.error('Failed to load recent orders', error);
+      }
+    };
+    loadRecentOrders();
+  }, []);
 
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -18,7 +32,7 @@ export default function Dashboard() {
               <h2 className="text-2xl font-black text-gray-900 tracking-tight">Dashboard</h2>
               <div className="flex items-center gap-2 text-gray-500 text-xs font-medium">
                 <MdCalendarToday className="text-[14px]" />
-                <span>Oct 24, 2023</span>
+                <span>{new Date().toLocaleDateString()}</span>
                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                 <span>Overview</span>
               </div>
@@ -44,10 +58,9 @@ export default function Dashboard() {
                 <MdPayments className="text-4xl text-primary" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Total Revenue</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">$12,450</p>
-              <div className="flex items-center gap-1 text-emerald-600 text-[10px] font-medium">
-                <MdTrendingUp className="text-[12px]" />
-                <span>+12% vs last week</span>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">$0.00</p>
+              <div className="flex items-center gap-1 text-slate-400 text-[10px] font-medium">
+                <span>No data</span>
               </div>
             </div>
             {/* Pending Orders */}
@@ -56,8 +69,8 @@ export default function Dashboard() {
                 <MdPendingActions className="text-4xl text-amber-500" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Pending Orders</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">14</p>
-              <p className="text-amber-600 text-[10px] font-medium">Needs Attention</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">0</p>
+              <p className="text-slate-400 text-[10px] font-medium">No data</p>
             </div>
             {/* Low Stock Alerts */}
             <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-1 relative overflow-hidden group">
@@ -65,8 +78,8 @@ export default function Dashboard() {
                 <MdWarning className="text-4xl text-red-500" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Low Stock Alerts</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">3 Items</p>
-              <p className="text-red-600 text-[10px] font-medium">Restock Immediately</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">0 Items</p>
+              <p className="text-slate-400 text-[10px] font-medium">No alerts</p>
             </div>
             {/* Active Printers */}
             <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-1 relative overflow-hidden group">
@@ -74,8 +87,8 @@ export default function Dashboard() {
                 <MdPrint className="text-4xl text-blue-500" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Active Printers</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">4/5</p>
-              <p className="text-emerald-600 text-[10px] font-medium">Stable Operation</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">0/0</p>
+              <p className="text-slate-400 text-[10px] font-medium">No data</p>
             </div>
           </div>
 
@@ -89,25 +102,12 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-[10px]">Last 7 Days Performance</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-gray-900">$4,200</p>
-                  <p className="text-green-600 text-[10px] font-medium">+5.2%</p>
+                  <p className="text-lg font-bold text-gray-900">$0.00</p>
+                  <p className="text-slate-400 text-[10px] font-medium">No data</p>
                 </div>
               </div>
-              <div className="flex-1 min-h-[120px] w-full relative flex items-end">
-                {/* Custom SVG Chart replacement with primary color */}
-                <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 50">
-                  <defs>
-                    <linearGradient id="gradientPrimary" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#195de6" stopOpacity="0.2"></stop>
-                      <stop offset="100%" stopColor="#195de6" stopOpacity="0"></stop>
-                    </linearGradient>
-                  </defs>
-                  <path d="M0 40 Q 10 35, 20 38 T 40 20 T 60 25 T 80 10 L 100 15 V 50 H 0 Z" fill="url(#gradientPrimary)"></path>
-                  <path d="M0 40 Q 10 35, 20 38 T 40 20 T 60 25 T 80 10 L 100 15" fill="none" stroke="#195de6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.75"></path>
-                </svg>
-              </div>
-              <div className="flex justify-between mt-2 text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
-                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+              <div className="flex-1 min-h-[120px] w-full relative flex items-center justify-center bg-slate-50 rounded">
+                <p className="text-xs text-slate-400">No sales data available</p>
               </div>
             </div>
             {/* Inventory Health Chart */}
@@ -116,42 +116,8 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-gray-900">Inventory Health</h3>
                 <p className="text-gray-500 text-[10px]">Critical Stock Levels</p>
               </div>
-              <div className="flex-1 flex items-end justify-between gap-2 h-32 pb-1">
-                {/* Bar 1 */}
-                <div className="flex flex-col items-center gap-1 flex-1 group">
-                  <div className="w-full bg-gray-100 rounded-t relative h-24 overflow-hidden">
-                    <div className="absolute bottom-0 w-full bg-emerald-500 h-full rounded-t transition-all group-hover:bg-emerald-400"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-500">Paper</span>
-                </div>
-                {/* Bar 2 */}
-                <div className="flex flex-col items-center gap-1 flex-1 group">
-                  <div className="w-full bg-gray-100 rounded-t relative h-24 overflow-hidden">
-                    <div className="absolute bottom-0 w-full bg-cyan-500 h-[80%] rounded-t transition-all group-hover:bg-cyan-400"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-500">Cyan</span>
-                </div>
-                {/* Bar 3 */}
-                <div className="flex flex-col items-center gap-1 flex-1 group">
-                  <div className="w-full bg-gray-100 rounded-t relative h-24 overflow-hidden">
-                    <div className="absolute bottom-0 w-full bg-pink-500 h-[30%] rounded-t animate-pulse"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-pink-600 font-bold">Mag</span>
-                </div>
-                {/* Bar 4 */}
-                <div className="flex flex-col items-center gap-1 flex-1 group">
-                  <div className="w-full bg-gray-100 rounded-t relative h-24 overflow-hidden">
-                    <div className="absolute bottom-0 w-full bg-yellow-400 h-[65%] rounded-t transition-all group-hover:bg-yellow-300"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-500">Yell</span>
-                </div>
-                {/* Bar 5 */}
-                <div className="flex flex-col items-center gap-1 flex-1 group">
-                  <div className="w-full bg-gray-100 rounded-t relative h-24 overflow-hidden">
-                    <div className="absolute bottom-0 w-full bg-gray-800 h-[70%] rounded-t transition-all"></div>
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-500">Key</span>
-                </div>
+              <div className="flex-1 flex items-center justify-center bg-slate-50 rounded h-32">
+                <p className="text-xs text-slate-400">No inventory data</p>
               </div>
             </div>
           </div>
@@ -162,7 +128,7 @@ export default function Dashboard() {
             <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
               <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-base font-bold text-gray-900">Recent Orders</h3>
-                <a className="text-xs font-medium text-primary hover:text-blue-700" href="#">View All</a>
+                <a className="text-xs font-medium text-primary hover:text-blue-700" href="/orders">View All</a>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
@@ -177,54 +143,26 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-gray-900">#ORD-2481</td>
-                      <td className="px-4 py-2.5">Acme Corp</td>
-                      <td className="px-4 py-2.5">Brochures (500)</td>
-                      <td className="px-4 py-2.5 text-gray-500">Oct 24</td>
-                      <td className="px-4 py-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
-                          Processing
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-medium">$450.00</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-gray-900">#ORD-2480</td>
-                      <td className="px-4 py-2.5">Jane Doe Design</td>
-                      <td className="px-4 py-2.5">Business Cards</td>
-                      <td className="px-4 py-2.5 text-gray-500">Oct 23</td>
-                      <td className="px-4 py-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
-                          Completed
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-medium">$85.00</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-gray-900">#ORD-2479</td>
-                      <td className="px-4 py-2.5">TechStart Inc</td>
-                      <td className="px-4 py-2.5">Banner (Large)</td>
-                      <td className="px-4 py-2.5 text-gray-500">Oct 23</td>
-                      <td className="px-4 py-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800">
-                          Pending Proof
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-medium">$120.00</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-gray-900">#ORD-2478</td>
-                      <td className="px-4 py-2.5">Local Cafe</td>
-                      <td className="px-4 py-2.5">Menus (Laminated)</td>
-                      <td className="px-4 py-2.5 text-gray-500">Oct 22</td>
-                      <td className="px-4 py-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
-                          Completed
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-medium">$340.00</td>
-                    </tr>
+                    {recentOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-slate-500 italic">No recent orders found</td>
+                      </tr>
+                    ) : (
+                      recentOrders.map((order) => (
+                        <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-2.5 font-medium text-gray-900">#{order._id.substring(0, 8)}</td>
+                          <td className="px-4 py-2.5">{order.customer?.name || 'Unknown'}</td>
+                          <td className="px-4 py-2.5">{order.products?.length || 0} Items</td>
+                          <td className="px-4 py-2.5 text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                          <td className="px-4 py-2.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-medium">${order.totalAmount?.toFixed(2)}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -263,35 +201,8 @@ export default function Dashboard() {
                   <h3 className="text-sm font-bold text-gray-900">Critical Stock</h3>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between p-1.5 rounded bg-red-50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-900">Magenta Ink</p>
-                        <p className="text-[10px] text-red-600">1 Unit Left</p>
-                      </div>
-                    </div>
-                    <button className="text-[10px] font-medium text-primary hover:underline cursor-pointer">Reorder</button>
-                  </div>
-                  <div className="flex items-center justify-between p-1.5 rounded bg-red-50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-900">A4 Glossy Paper</p>
-                        <p className="text-[10px] text-red-600">Low Supply</p>
-                      </div>
-                    </div>
-                    <button className="text-[10px] font-medium text-primary hover:underline cursor-pointer">Reorder</button>
-                  </div>
-                  <div className="flex items-center justify-between p-1.5 rounded bg-amber-50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-900">300gsm Cardstock</p>
-                        <p className="text-[10px] text-amber-600">Below 20%</p>
-                      </div>
-                    </div>
-                    <button className="text-[10px] font-medium text-primary hover:underline cursor-pointer">Check</button>
+                  <div className="p-4 text-center text-xs text-slate-500 italic">
+                    No critical stock alerts
                   </div>
                 </div>
               </div>

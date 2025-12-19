@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MdVisibility, MdVisibilityOff, MdCheck } from 'react-icons/md';
 import Logo from '@/components/Logo';
+import { login } from '@/utils/api';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -10,10 +11,16 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Add login logic here
-        console.log('Login attempt:', { email, password, rememberMe });
+        try {
+            const data = await login(email, password);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data));
+            window.location.href = '/';
+        } catch (error) {
+            alert('Invalid credentials');
+        }
     };
 
     return (

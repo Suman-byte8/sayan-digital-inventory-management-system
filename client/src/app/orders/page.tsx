@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchOrders } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
 import {
     MdAdd,
@@ -17,6 +18,15 @@ import {
 
 export default function OrdersPage() {
     const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+    const [orders, setOrders] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadOrders = async () => {
+            const data = await fetchOrders();
+            setOrders(data);
+        };
+        loadOrders();
+    }, []);
 
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -52,8 +62,8 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">12</p>
-                                <span className="text-emerald-600 text-[10px] font-medium bg-emerald-100 px-1.5 py-0.5 rounded">+4%</span>
+                                <p className="text-slate-900 text-2xl font-bold">0</p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 rounded-lg p-3 border border-slate-200 bg-surface-light shadow-sm">
@@ -64,8 +74,8 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">8</p>
-                                <span className="text-emerald-600 text-[10px] font-medium bg-emerald-100 px-1.5 py-0.5 rounded">+12%</span>
+                                <p className="text-slate-900 text-2xl font-bold">0</p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 rounded-lg p-3 border border-slate-200 bg-surface-light shadow-sm">
@@ -76,8 +86,8 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">$2,450</p>
-                                <span className="text-emerald-600 text-[10px] font-medium bg-emerald-100 px-1.5 py-0.5 rounded">+8%</span>
+                                <p className="text-slate-900 text-2xl font-bold">$0.00</p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
                             </div>
                         </div>
                     </div>
@@ -142,161 +152,39 @@ export default function OrdersPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200">
-                                    {/* Row 1 */}
-                                    <tr className="hover:bg-slate-50 transition-colors group">
-                                        <td className="p-2.5">
-                                            <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
-                                        </td>
-                                        <td className="p-2.5">
-                                            <a className="text-xs font-semibold text-primary hover:underline" href="#">#ORD-7829</a>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">AC</div>
-                                                <span className="text-xs font-medium text-slate-900">Acme Corp</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">
-                                            500x Business Cards
-                                            <span className="block text-[10px] text-slate-500">Matte Finish</span>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">Oct 24, 2023</td>
-                                        <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">$120.00</td>
-                                        <td className="p-2.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
-                                                In Production
-                                            </span>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                <MdMoreVert className="text-[16px]" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {/* Row 2 */}
-                                    <tr className="hover:bg-slate-50 transition-colors group">
-                                        <td className="p-2.5">
-                                            <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
-                                        </td>
-                                        <td className="p-2.5">
-                                            <a className="text-xs font-semibold text-primary hover:underline" href="#">#ORD-7828</a>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-center bg-no-repeat bg-cover rounded-full size-6" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCGgcn3V_A3CjCT7g9u4_t3ELVALBONJ4Zwh_oZSH4HNou3nQYScUHda-EO-RWkxtDBcozKSYB74gDlL3Zf2faRkFPLo8GyHhSTBR-DzwVZO3_iF36RZwR9_3ZZB35rSeU1pC98HcgZpuKMumQGkfHc9lg8g4-6p3Ih-HIx4AYkT0eMe_sB0_SiWUgaixBFTHKV3c4GGfN_8QAUFfzDGtdWkCVwawbI4x84rjkNyixH9kzdr9XZxgN2gR5nEqwvJOiAJB4DPRXMPVo")' }}></div>
-                                                <span className="text-xs font-medium text-slate-900">Sarah Jenkins</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">
-                                            20x A3 Posters
-                                            <span className="block text-[10px] text-slate-500">Glossy</span>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">Oct 23, 2023</td>
-                                        <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">$85.50</td>
-                                        <td className="p-2.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
-                                                Ready for Pickup
-                                            </span>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                <MdMoreVert className="text-[16px]" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {/* Row 3 */}
-                                    <tr className="hover:bg-slate-50 transition-colors group">
-                                        <td className="p-2.5">
-                                            <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
-                                        </td>
-                                        <td className="p-2.5">
-                                            <a className="text-xs font-semibold text-primary hover:underline" href="#">#ORD-7827</a>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="size-6 rounded-full bg-purple-200 flex items-center justify-center text-[10px] font-bold text-purple-700">TS</div>
-                                                <span className="text-xs font-medium text-slate-900">TechSolutions Inc.</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">
-                                            1000x Flyers
-                                            <span className="block text-[10px] text-slate-500">Double Sided</span>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">Oct 23, 2023</td>
-                                        <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">$350.00</td>
-                                        <td className="p-2.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
-                                                Pending Payment
-                                            </span>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                <MdMoreVert className="text-[16px]" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {/* Row 4 */}
-                                    <tr className="hover:bg-slate-50 transition-colors group">
-                                        <td className="p-2.5">
-                                            <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
-                                        </td>
-                                        <td className="p-2.5">
-                                            <a className="text-xs font-semibold text-primary hover:underline" href="#">#ORD-7826</a>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-center bg-no-repeat bg-cover rounded-full size-6" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCrsxiAa0b55f62O5N0GBJFTwYx7JE7nUy_1ZJ-c-k_Qmi-CxtIcwJ5g133hrJkHFjBp1v-y80i9QuBlNP_gGzlrx5J09QbrIqlH04oRlb4mukTLV9DMtKT3Rkw41IZjia9guLONNl-OZhZnZ-cD80bTK2FvxP7WyoLNsz4eDlaacn8dFh3Gt-8KVbt2ok-xGo4ZofpRS7CxyO4lgQaFbg647OhLMnbtdoy4l0-Rburxvk8JcfbkbERbTrE9ZfOo2ZZhHLByUsdzEs")' }}></div>
-                                                <span className="text-xs font-medium text-slate-900">Michael Brown</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">
-                                            Custom Banner (5x2ft)
-                                            <span className="block text-[10px] text-slate-500">Vinyl</span>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">Oct 22, 2023</td>
-                                        <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">$65.00</td>
-                                        <td className="p-2.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">
-                                                Cancelled
-                                            </span>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                <MdMoreVert className="text-[16px]" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {/* Row 5 */}
-                                    <tr className="hover:bg-slate-50 transition-colors group">
-                                        <td className="p-2.5">
-                                            <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
-                                        </td>
-                                        <td className="p-2.5">
-                                            <a className="text-xs font-semibold text-primary hover:underline" href="#">#ORD-7825</a>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="size-6 rounded-full bg-pink-200 flex items-center justify-center text-[10px] font-bold text-pink-700">BA</div>
-                                                <span className="text-xs font-medium text-slate-900">Bakery Delight</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">
-                                            200x Menus
-                                            <span className="block text-[10px] text-slate-500">Laminated</span>
-                                        </td>
-                                        <td className="p-2.5 text-xs text-slate-500">Oct 21, 2023</td>
-                                        <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">$210.00</td>
-                                        <td className="p-2.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
-                                                Completed
-                                            </span>
-                                        </td>
-                                        <td className="p-2.5">
-                                            <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                <MdMoreVert className="text-[16px]" />
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    {orders.map((order) => (
+                                        <tr key={order._id} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="p-2.5">
+                                                <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
+                                            </td>
+                                            <td className="p-2.5">
+                                                <a className="text-xs font-semibold text-primary hover:underline" href="#">#{order._id.substring(0, 8)}</a>
+                                            </td>
+                                            <td className="p-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                        {order.customer?.name?.substring(0, 2).toUpperCase() || 'NA'}
+                                                    </div>
+                                                    <span className="text-xs font-medium text-slate-900">{order.customer?.name || 'Unknown'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-2.5 text-xs text-slate-500">
+                                                {order.products?.length || 0} Items
+                                            </td>
+                                            <td className="p-2.5 text-xs text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                                            <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">${order.totalAmount?.toFixed(2)}</td>
+                                            <td className="p-2.5">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-2.5">
+                                                <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
+                                                    <MdMoreVert className="text-[16px]" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>

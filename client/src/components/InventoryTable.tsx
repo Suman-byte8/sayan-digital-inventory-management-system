@@ -4,9 +4,10 @@ export interface Product {
     _id: string;
     name: string;
     description: string;
-    price: number;
     category: string;
-    stockQuantity: number;
+    buyingPrice: number;
+    sellingPrice: number;
+    inStock: boolean;
     imageUrl?: string;
 }
 
@@ -51,14 +52,14 @@ const InventoryTable = ({ products, onEdit, onDelete }: InventoryTableProps) => 
                                     </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-xs text-slate-600">{product.category}</td>
-                                <td className="px-4 py-2.5 text-xs font-medium text-slate-900 text-right tabular-nums">${product.price?.toFixed(2) ?? '0.00'}</td>
-                                <td className="px-4 py-2.5 text-xs text-slate-600 text-center">{product.stockQuantity}</td>
+                                <td className="px-4 py-2.5 text-xs font-medium text-slate-900 text-right tabular-nums">${product.sellingPrice?.toFixed(2) ?? '0.00'}</td>
+                                <td className="px-4 py-2.5 text-xs text-slate-600 text-center">{product.inStock ? 'In Stock' : 'Out of Stock'}</td>
                                 <td className="px-4 py-2.5 text-center">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${product.stockQuantity > 0
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${product.inStock
                                         ? 'bg-green-100 text-green-700 border-green-200'
                                         : 'bg-red-100 text-red-700 border-red-200'
                                         }`}>
-                                        {product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
+                                        {product.inStock ? 'In Stock' : 'Out of Stock'}
                                     </span>
                                 </td>
                                 <td className="px-4 py-2.5 text-right">

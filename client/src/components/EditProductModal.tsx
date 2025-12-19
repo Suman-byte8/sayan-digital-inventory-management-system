@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { MdClose, MdExpandMore } from 'react-icons/md';
-import { createProduct, fetchCategories, Category } from '@/utils/api';
+import { updateProduct, fetchCategories, Category } from '@/utils/api';
+import { Product } from './InventoryTable';
 
-interface AddProductModalProps {
+interface EditProductModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onProductAdded: () => void;
+    onProductUpdated: () => void;
+    product: Product | null;
 }
 
-const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalProps) => {
+const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }: EditProductModalProps) => {
     const [formData, setFormData] = useState({
         name: '',
         category: '',
@@ -25,19 +27,37 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
 
     useEffect(() => {
         if (isOpen) {
-            const getCategories = async () => {
-                try {
-                    const fetchedCategories = await fetchCategories();
-                    setCategories(fetchedCategories);
-                } catch (error) {
-                    console.error('Failed to fetch categories', error);
-                }
+            const loadCategories = async () => {
+                const data = await fetchCategories();
+                setCategories(data);
             };
-            getCategories();
+            loadCategories();
         }
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        if (product) {
+            setFormData({
+                name: product.name ?? '',
+                category: product.category ?? '',
+                description: product.description ?? '',
+                buyingPrice: String(product.buyingPrice ?? ''),
+                sellingPrice: String(product.sellingPrice ?? ''),
+                inStock: product.inStock,
+            });
+        } else {
+            setFormData({
+                name: '',
+                category: '',
+                description: '',
+                buyingPrice: '',
+                sellingPrice: '',
+                inStock: true,
+            });
+        }
+    }, [product]);
+
+    if (!isOpen || !product) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -68,11 +88,11 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
                 data.append('image', imageFile);
             }
 
-            await createProduct(data);
-            onProductAdded();
+            await updateProduct(product._id, data);
+            onProductUpdated();
             onClose();
         } catch (error) {
-            console.error('Failed to add product', error);
+            console.error('Failed to update product', error);
             // Handle error (e.g., show toast)
         }
     };
@@ -82,7 +102,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
             {/* Modal Backdrop / Overlay */}
             <div
                 aria-hidden="true"
-                className="fixed inset-0 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
@@ -90,7 +110,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
             <div className="relative w-full max-w-lg transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all border border-gray-100 max-h-[90vh] flex flex-col">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 bg-gray-50">
-                    <h3 className="text-xl font-bold leading-6 text-slate-900">Add New Product</h3>
+                    <h3 className="text-xl font-bold leading-6 text-slate-900">Edit Product</h3>
                     <button
                         className="rounded-md bg-transparent p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
                         type="button"
@@ -252,4 +272,4 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
     );
 };
 
-export default AddProductModal;
+export default EditProductModal;

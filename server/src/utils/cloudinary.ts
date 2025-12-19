@@ -1,19 +1,19 @@
 import { v2 as cloudinary } from 'cloudinary';
+import path from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Explicitly load .env from server root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Configure Cloudinary
-if (process.env.CLOUDINARY_URL) {
-    // CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
-    // The SDK automatically parses this if set in environment variables,
-    // but explicit configuration ensures it's loaded correctly if we need to access properties.
-    // However, for simple uploads, just importing v2 is often enough if env var is present.
-    // Let's ensure it's configured.
-    const url = process.env.CLOUDINARY_URL;
-    // No extra config needed if CLOUDINARY_URL is set correctly in env
-} else {
-    console.warn('CLOUDINARY_URL is not set in environment variables');
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    console.warn('Cloudinary environment variables are missing. Image upload will fail.');
 }
 
 export const uploadToCloudinary = async (filePath: string): Promise<string> => {
