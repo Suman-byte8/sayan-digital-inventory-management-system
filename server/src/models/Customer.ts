@@ -12,7 +12,7 @@ export interface ICustomer extends Document {
 const CustomerSchema: Schema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true },
+    phone: { type: String, required: true, index: true },
     address: { type: String, required: true },
     company: { type: String },
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },

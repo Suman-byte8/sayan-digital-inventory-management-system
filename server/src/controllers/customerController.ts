@@ -29,11 +29,55 @@ export const getCustomerById = async (req: Request, res: Response) => {
 export const createCustomer = async (req: Request, res: Response) => {
     try {
         const { name, email, phone, address, company, status } = req.body;
+
+        // Check if customer with same phone already exists
+        if (phone) {
+            const existingCustomer = await Customer.findOne({ phone });
+            if (existingCustomer) {
+                return res.status(400).json({ message: 'Mobile number already exists' });
+            }
+        }
+
         const customer = new Customer({ name, email, phone, address, company, status });
         await customer.save();
         res.status(201).json(customer);
     } catch (error) {
         res.status(500).json({ message: 'Error creating customer', error });
+    }
+};
+
+export const searchCustomerByPhone = async (req: Request, res: Response) => {
+    try {
+        const { phone } = req.query;
+        if (!phone) return res.status(400).json({ message: 'Phone number or name is required' });
+
+        const searchStr = phone as string;
+        let customers = [];
+
+        // 1. Try exact phone match
+        customers = await Customer.find({ phone: searchStr });
+
+        // 2. Try regex phone match (ignore non-numeric characters)
+        if (customers.length === 0) {
+            const numericPhone = searchStr.replace(/\D/g, '');
+            if (numericPhone.length > 0) {
+                // Create a regex that matches the digits in order with anything in between
+                const phoneRegex = new RegExp(numericPhone.split('').join('.*'));
+                customers = await Customer.find({ phone: { $regex: phoneRegex } });
+            }
+        }
+
+        // 3. Try name match as fallback
+        if (customers.length === 0) {
+            customers = await Customer.find({ name: { $regex: new RegExp(searchStr, 'i') } });
+        }
+
+        if (customers.length === 0) return res.status(404).json({ message: 'Customer not found' });
+
+        res.json(customers);
+    } catch (error) {
+        console.error('Error in searchCustomerByPhone:', error);
+        res.status(500).json({ message: 'Error searching customer', error });
     }
 };
 

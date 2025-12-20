@@ -150,6 +150,19 @@ export const fetchCustomerById = async (id: string): Promise<any> => {
     }
 };
 
+export const searchCustomerByPhone = async (phone: string): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/customers/search/phone?phone=${phone}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error searching customer by phone:', error);
+        throw error;
+    }
+};
+
 export const createCustomer = async (customer: any): Promise<any> => {
     try {
         const token = localStorage.getItem('token');

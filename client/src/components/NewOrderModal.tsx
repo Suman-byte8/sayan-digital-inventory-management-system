@@ -7,11 +7,16 @@ import {
     MdPersonAdd,
     MdAdd,
     MdDelete,
-    MdSave
+    MdSave,
+    MdCheckCircle
 } from 'react-icons/md';
+import { searchCustomerByPhone, createOrder, fetchProducts } from '@/utils/api';
+import AddCustomerModal from './AddCustomerModal';
+import { Product } from './InventoryTable';
 
 interface OrderItem {
     id: string;
+    productId: string;
     productName: string;
     quantity: number;
     price: number;
@@ -24,26 +29,106 @@ interface NewOrderModalProps {
 
 export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
     const [customerSearch, setCustomerSearch] = useState('');
-    const [items, setItems] = useState<OrderItem[]>([
-        { id: '1', productName: 'Business Cards (Matte, 500x)', quantity: 1, price: 120.00 }
-    ]);
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [items, setItems] = useState<OrderItem[]>([]);
     const [paymentStatus, setPaymentStatus] = useState('unpaid');
     const [notes, setNotes] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+    const [activeProductSearch, setActiveProductSearch] = useState<string | null>(null);
 
     // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             setCustomerSearch('');
-            setItems([{ id: '1', productName: 'Business Cards (Matte, 500x)', quantity: 1, price: 120.00 }]);
+            setSelectedCustomer(null);
+            setSearchResults([]);
+            setItems([]);
             setPaymentStatus('unpaid');
             setNotes('');
+            setIsSaving(false);
+            loadProducts();
         }
     }, [isOpen]);
+
+    const loadProducts = async () => {
+        try {
+            const data = await fetchProducts();
+            setProducts(data);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        }
+    };
+
+    const handleCustomerSearch = async () => {
+        if (!customerSearch) return;
+        setIsSearching(true);
+        try {
+            const results = await searchCustomerByPhone(customerSearch);
+            if (results.length === 1) {
+                setSelectedCustomer(results[0]);
+                setSearchResults([]);
+            } else {
+                setSearchResults(results);
+                setSelectedCustomer(null);
+            }
+        } catch (error) {
+            console.error('Customer not found');
+            setSelectedCustomer(null);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const selectCustomer = (customer: any) => {
+        setSelectedCustomer(customer);
+        setCustomerSearch(customer.phone);
+        setSearchResults([]);
+    };
+
+    const handleSaveOrder = async () => {
+        if (!selectedCustomer) {
+            alert('Please select a customer first (search by phone)');
+            return;
+        }
+
+        if (items.length === 0) {
+            alert('Please add at least one item');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const orderData = {
+                customer: selectedCustomer._id,
+                products: items.map(item => ({
+                    product: item.productId,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                totalAmount: grandTotal,
+                status: paymentStatus === 'paid' ? 'completed' : 'pending'
+            };
+
+            await createOrder(orderData);
+            alert('Order saved successfully!');
+            onClose();
+        } catch (error) {
+            alert('Error saving order');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handleAddItem = () => {
         const newItem: OrderItem = {
             id: Date.now().toString(),
-            productName: 'New Item',
+            productId: '',
+            productName: '',
             quantity: 1,
             price: 0
         };
@@ -61,6 +146,21 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
             }
             return item;
         }));
+    };
+
+    const handleProductSelect = (itemId: string, product: Product) => {
+        setItems(items.map(item => {
+            if (item.id === itemId) {
+                return {
+                    ...item,
+                    productId: product._id,
+                    productName: product.name,
+                    price: product.sellingPrice
+                };
+            }
+            return item;
+        }));
+        setActiveProductSearch(null);
     };
 
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -89,25 +189,75 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                     <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1.5 relative">
-                                <label className="text-xs font-semibold text-slate-900">Customer</label>
-                                <div className="relative">
-                                    <input
-                                        className="w-full rounded-md border-slate-200 bg-slate-50 text-xs px-3 py-2 focus:ring-primary focus:border-primary pr-8"
-                                        placeholder="Search or select customer..."
-                                        type="text"
-                                        value={customerSearch}
-                                        onChange={(e) => setCustomerSearch(e.target.value)}
-                                    />
-                                    <MdSearch className="absolute right-2.5 top-2 text-slate-400 text-[16px]" />
+                                <label className="text-xs font-semibold text-slate-900">Customer Phone</label>
+                                <div className="relative flex gap-2">
+                                    <div className="relative flex-1">
+                                        <input
+                                            className="w-full rounded-md border-slate-200 bg-slate-50 text-xs px-3 py-2 focus:ring-primary focus:border-primary pr-8"
+                                            placeholder="Enter phone number or name..."
+                                            type="text"
+                                            value={customerSearch}
+                                            onChange={(e) => {
+                                                setCustomerSearch(e.target.value);
+                                                if (e.target.value === '') setSearchResults([]);
+                                            }}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleCustomerSearch()}
+                                        />
+                                        <MdSearch className="absolute right-2.5 top-2 text-slate-400 text-[16px]" />
+
+                                        {/* Customer Search Results Dropdown */}
+                                        {searchResults.length > 0 && (
+                                            <div className="absolute z-[70] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
+                                                {searchResults.map((cust) => (
+                                                    <button
+                                                        key={cust._id}
+                                                        type="button"
+                                                        onClick={() => selectCustomer(cust)}
+                                                        className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
+                                                    >
+                                                        <div className="text-xs font-bold text-slate-900">{cust.name}</div>
+                                                        <div className="text-[10px] text-slate-500">{cust.phone} • {cust.company}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleCustomerSearch}
+                                        disabled={isSearching}
+                                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md text-xs font-medium transition-colors"
+                                    >
+                                        {isSearching ? '...' : 'Search'}
+                                    </button>
                                 </div>
+                                {selectedCustomer && (
+                                    <div className="mt-1 flex items-center gap-2 text-[10px] text-green-600 font-medium bg-green-50 px-2 py-1 rounded border border-green-100">
+                                        <MdCheckCircle className="text-[14px]" />
+                                        <span>Customer: {selectedCustomer.name} ({selectedCustomer.company})</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-end">
-                                <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-primary text-primary hover:bg-blue-50 text-xs font-medium transition-colors" type="button">
+                                <button
+                                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-primary text-primary hover:bg-blue-50 text-xs font-medium transition-colors"
+                                    type="button"
+                                    onClick={() => setIsAddCustomerModalOpen(true)}
+                                >
                                     <MdPersonAdd className="text-[16px]" />
                                     Add New Customer
                                 </button>
                             </div>
                         </div>
+
+                        <AddCustomerModal
+                            isOpen={isAddCustomerModalOpen}
+                            onClose={() => setIsAddCustomerModalOpen(false)}
+                            onSuccess={(newCust) => {
+                                setSelectedCustomer(newCust);
+                                setCustomerSearch(newCust.phone);
+                            }}
+                        />
 
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center justify-between">
@@ -131,13 +281,39 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
 
                                 {items.map((item) => (
                                     <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center group relative border-b border-dashed border-slate-200 last:border-0 pb-2 last:pb-0">
-                                        <div className="col-span-1 md:col-span-6">
+                                        <div className="col-span-1 md:col-span-6 relative">
                                             <label className="md:hidden text-[10px] text-slate-500 mb-0.5 block">Product</label>
-                                            <input
-                                                className="w-full rounded-md border-slate-200 bg-white text-xs px-2.5 py-1.5 focus:ring-primary focus:border-primary"
-                                                value={item.productName}
-                                                onChange={(e) => updateItem(item.id, 'productName', e.target.value)}
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    className="w-full rounded-md border-slate-200 bg-white text-xs px-2.5 py-1.5 focus:ring-primary focus:border-primary"
+                                                    placeholder="Search product..."
+                                                    value={item.productName}
+                                                    onChange={(e) => {
+                                                        updateItem(item.id, 'productName', e.target.value);
+                                                        setActiveProductSearch(item.id);
+                                                    }}
+                                                    onFocus={() => setActiveProductSearch(item.id)}
+                                                />
+
+                                                {/* Product Search Results Dropdown */}
+                                                {activeProductSearch === item.id && item.productName && (
+                                                    <div className="absolute z-[70] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
+                                                        {products
+                                                            .filter(p => p.name.toLowerCase().includes(item.productName.toLowerCase()))
+                                                            .map((prod) => (
+                                                                <button
+                                                                    key={prod._id}
+                                                                    type="button"
+                                                                    onClick={() => handleProductSelect(item.id, prod)}
+                                                                    className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
+                                                                >
+                                                                    <div className="text-xs font-bold text-slate-900">{prod.name}</div>
+                                                                    <div className="text-[10px] text-slate-500">${prod.sellingPrice} • {prod.category}</div>
+                                                                </button>
+                                                            ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="col-span-1 md:col-span-2">
                                             <label className="md:hidden text-[10px] text-slate-500 mb-0.5 block">Qty</label>
@@ -242,13 +418,12 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                         Cancel
                     </button>
                     <button
-                        onClick={() => {
-                            alert('Order saved!');
-                            onClose();
-                        }}
-                        className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                        onClick={handleSaveOrder}
+                        disabled={isSaving}
+                        className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
-                        Save Order
+                        <MdSave className="text-[16px]" />
+                        {isSaving ? 'Saving...' : 'Save Order'}
                     </button>
                 </div>
             </div>

@@ -21,6 +21,7 @@ import {
     MdEdit
 } from 'react-icons/md';
 import CustomerLink from '@/components/CustomerLink';
+import AddCustomerModal from '@/components/AddCustomerModal';
 
 interface Customer {
     id: string;
@@ -42,19 +43,9 @@ export default function CustomersPage() {
     const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
 
-    const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
-        name: '',
-        company: '',
-        email: '',
-        phone: '',
-        address: '',
-        status: 'Active',
-        initials: '',
-        initialsColor: 'text-blue-600 bg-blue-100',
-        lastOrder: 'N/A',
-        totalDue: 0
-    });
+    const [editingCustomer, setEditingCustomer] = useState<any>(null);
 
     const loadCustomers = async () => {
         const data = await fetchCustomers();
@@ -78,54 +69,13 @@ export default function CustomersPage() {
         loadCustomers();
     }, []);
 
-    const handleSaveCustomer = async () => {
-        if (!newCustomer.name || !newCustomer.email) {
-            alert('Please fill in at least Name and Email');
-            return;
-        }
-
-        try {
-            if (isEditMode && editingCustomerId) {
-                await updateCustomer(editingCustomerId, {
-                    name: newCustomer.name,
-                    email: newCustomer.email,
-                    phone: newCustomer.phone,
-                    address: newCustomer.address,
-                    company: newCustomer.company,
-                    status: newCustomer.status
-                });
-            } else {
-                await createCustomer({
-                    name: newCustomer.name,
-                    email: newCustomer.email,
-                    phone: newCustomer.phone,
-                    address: newCustomer.address,
-                    company: newCustomer.company,
-                    status: newCustomer.status
-                });
-            }
-
-            await loadCustomers();
-            handleCloseModal();
-        } catch (error) {
-            alert(`Error ${isEditMode ? 'updating' : 'creating'} customer`);
-        }
+    const handleSaveCustomer = async (savedCustomer: any) => {
+        await loadCustomers();
+        handleCloseModal();
     };
 
     const handleEditClick = (customer: Customer) => {
-        setNewCustomer({
-            name: customer.name,
-            company: customer.company === 'N/A' ? '' : customer.company,
-            email: customer.email,
-            phone: customer.phone,
-            address: customer.address,
-            status: customer.status,
-            initials: customer.initials,
-            initialsColor: customer.initialsColor,
-            lastOrder: customer.lastOrder,
-            totalDue: customer.totalDue
-        });
-        setEditingCustomerId(customer.id);
+        setEditingCustomer(customer);
         setIsEditMode(true);
         setIsModalOpen(true);
         setActiveDropdown(null);
@@ -134,19 +84,7 @@ export default function CustomersPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setIsEditMode(false);
-        setEditingCustomerId(null);
-        setNewCustomer({
-            name: '',
-            company: '',
-            email: '',
-            phone: '',
-            address: '',
-            status: 'Active',
-            initials: '',
-            initialsColor: 'text-blue-600 bg-blue-100',
-            lastOrder: 'N/A',
-            totalDue: 0
-        });
+        setEditingCustomer(null);
     };
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -171,11 +109,17 @@ export default function CustomersPage() {
         }
     };
 
-    const filteredCustomers = customers.filter(customer =>
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.company.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCustomers = customers.filter(customer => {
+        const matchesSearch =
+            customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.phone.includes(searchTerm);
+
+        const matchesStatus = statusFilter === 'All' || customer.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -219,10 +163,15 @@ export default function CustomersPage() {
                             />
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            <button className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                <MdFilterList className="text-[16px]" />
-                                <span>Filter</span>
-                            </button>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as any)}
+                                className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm outline-none"
+                            >
+                                <option value="All">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
                             <button className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                                 <MdSort className="text-[16px]" />
                                 <span>Sort</span>
@@ -333,155 +282,12 @@ export default function CustomersPage() {
             </div>
 
             {/* Add/Edit Customer Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4">
-                    <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl flex flex-col max-h-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        {/* Modal Header */}
-                        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900">{isEditMode ? 'Edit Customer' : 'Add New Customer'}</h3>
-                                <p className="text-xs text-slate-500 mt-0.5">{isEditMode ? 'Update customer details.' : 'Enter customer details to create a new profile.'}</p>
-                            </div>
-                            <button
-                                onClick={handleCloseModal}
-                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-                            >
-                                <MdClose className="text-[20px]" />
-                            </button>
-                        </div>
-
-                        {/* Modal Body */}
-                        <div className="p-4 overflow-y-auto">
-                            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <label className="block">
-                                        <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Full Name</span>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <MdPerson className="text-[18px]" />
-                                            </span>
-                                            <input
-                                                type="text"
-                                                className="w-full pl-9 pr-3 h-10 rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all"
-                                                placeholder="e.g. John Doe"
-                                                value={newCustomer.name}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                                            />
-                                        </div>
-                                    </label>
-                                    <label className="block">
-                                        <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Company Name</span>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <MdBusiness className="text-[18px]" />
-                                            </span>
-                                            <input
-                                                type="text"
-                                                className="w-full pl-9 pr-3 h-10 rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all"
-                                                placeholder="e.g. Acme Corp"
-                                                value={newCustomer.company}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
-                                            />
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <label className="block">
-                                        <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Email Address</span>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <MdEmail className="text-[18px]" />
-                                            </span>
-                                            <input
-                                                type="email"
-                                                className="w-full pl-9 pr-3 h-10 rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all"
-                                                placeholder="john@example.com"
-                                                value={newCustomer.email}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                                            />
-                                        </div>
-                                    </label>
-                                    <label className="block">
-                                        <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Phone Number</span>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <MdCall className="text-[18px]" />
-                                            </span>
-                                            <input
-                                                type="tel"
-                                                className="w-full pl-9 pr-3 h-10 rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all"
-                                                placeholder="+1 (555) 000-0000"
-                                                value={newCustomer.phone}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                            />
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <label className="block">
-                                    <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Address</span>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-3 text-slate-400">
-                                            <MdLocationOn className="text-[18px]" />
-                                        </span>
-                                        <textarea
-                                            className="w-full pl-9 pr-3 py-2.5 min-h-[100px] rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all resize-y"
-                                            placeholder="Enter full billing address..."
-                                            value={newCustomer.address}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                                        ></textarea>
-                                    </div>
-                                </label>
-
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            id="status-active"
-                                            name="status"
-                                            value="Active"
-                                            checked={newCustomer.status === 'Active'}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, status: 'Active' })}
-                                            className="rounded-full border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5"
-                                        />
-                                        <label htmlFor="status-active" className="text-[10px] font-medium text-slate-700 cursor-pointer">Active</label>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            id="status-inactive"
-                                            name="status"
-                                            value="Inactive"
-                                            checked={newCustomer.status === 'Inactive'}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, status: 'Inactive' })}
-                                            className="rounded-full border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5"
-                                        />
-                                        <label htmlFor="status-inactive" className="text-[10px] font-medium text-slate-700 cursor-pointer">Inactive</label>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
-                            <button
-                                onClick={handleCloseModal}
-                                className="px-5 h-9 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveCustomer}
-                                className="px-5 h-9 rounded-lg bg-primary text-white text-xs font-bold hover:bg-blue-700 shadow-sm shadow-blue-500/20 transition-all flex items-center gap-2"
-                            >
-                                <MdSave className="text-[16px]" />
-                                {isEditMode ? 'Update Customer' : 'Save Customer'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <AddCustomerModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSuccess={handleSaveCustomer}
+                editCustomer={editingCustomer}
+            />
         </main>
     );
 }
