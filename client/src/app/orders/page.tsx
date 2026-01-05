@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchOrders } from '@/utils/api';
+import { fetchOrders, updateOrder, deleteOrder } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
 import {
     MdAdd,
@@ -13,20 +13,80 @@ import {
     MdFilterList,
     MdMoreVert,
     MdChevronLeft,
-    MdChevronRight
+    MdChevronRight,
+    MdDelete
 } from 'react-icons/md';
 
 export default function OrdersPage() {
     const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
     const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [totalOrders, setTotalOrders] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('All');
+    const [paymentStatus, setPaymentStatus] = useState('All');
+    const [dateRange, setDateRange] = useState('Last 30 Days');
+
+    const loadOrders = async () => {
+        setLoading(true);
+        try {
+            const params: any = {
+                page: currentPage,
+                limit: 10,
+                search,
+                status,
+                paymentStatus
+            };
+
+            // Handle date range (simplified for now)
+            if (dateRange === 'Today') {
+                params.startDate = new Date().setHours(0, 0, 0, 0);
+            } else if (dateRange === 'Last 7 Days') {
+                params.startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            }
+
+            const data = await fetchOrders(params);
+            setOrders(data.orders);
+            setTotalOrders(data.total);
+            setTotalPages(data.pages);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadOrders = async () => {
-            const data = await fetchOrders();
-            setOrders(data);
-        };
         loadOrders();
-    }, []);
+    }, [currentPage, status, paymentStatus, dateRange]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        setCurrentPage(1);
+        loadOrders();
+    };
+
+    const handleUpdateStatus = async (id: string, newStatus: string) => {
+        try {
+            await updateOrder(id, { status: newStatus });
+            loadOrders();
+        } catch (error) {
+            console.error('Error updating order status:', error);
+        }
+    };
+
+    const handleDeleteOrder = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this order?')) {
+            try {
+                await deleteOrder(id);
+                loadOrders();
+            } catch (error) {
+                console.error('Error deleting order:', error);
+            }
+        }
+    };
 
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -62,8 +122,10 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">0</p>
-                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
+                                <p className="text-slate-900 text-2xl font-bold">{orders.filter(o => o.status === 'pending').length}</p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">
+                                    {totalOrders > 0 ? `${((orders.filter(o => o.status === 'pending').length / orders.length) * 100).toFixed(0)}%` : '0%'}
+                                </span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 rounded-lg p-3 border border-slate-200 bg-surface-light shadow-sm">
@@ -74,8 +136,10 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">0</p>
-                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
+                                <p className="text-slate-900 text-2xl font-bold">{orders.filter(o => o.status === 'completed').length}</p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">
+                                    {totalOrders > 0 ? `${((orders.filter(o => o.status === 'completed').length / orders.length) * 100).toFixed(0)}%` : '0%'}
+                                </span>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1 rounded-lg p-3 border border-slate-200 bg-surface-light shadow-sm">
@@ -86,8 +150,10 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
-                                <p className="text-slate-900 text-2xl font-bold">$0.00</p>
-                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">No data</span>
+                                <p className="text-slate-900 text-2xl font-bold">
+                                    ${orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
+                                <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">This page</span>
                             </div>
                         </div>
                     </div>
@@ -95,7 +161,7 @@ export default function OrdersPage() {
                     {/* Filters & Search Toolbar */}
                     <div className="flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center bg-surface-light p-3 rounded-lg border border-slate-200 shadow-sm">
                         {/* Search */}
-                        <label className="flex flex-col min-w-[280px] w-full lg:w-auto h-9">
+                        <form onSubmit={handleSearch} className="flex flex-col min-w-[280px] w-full lg:w-auto h-9">
                             <div className="flex w-full flex-1 items-center rounded-lg h-full bg-background-light border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                                 <div className="text-slate-400 flex items-center justify-center pl-2.5">
                                     <MdSearch className="text-[18px]" />
@@ -103,31 +169,64 @@ export default function OrdersPage() {
                                 <input
                                     className="w-full bg-transparent border-none text-xs text-slate-900 placeholder:text-slate-400 focus:ring-0 px-2.5 outline-none"
                                     placeholder="Search by Order ID, Customer..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
                                 />
                             </div>
-                        </label>
+                        </form>
                         {/* Filter Chips */}
                         <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
                             <div className="relative group">
-                                <button className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors">
-                                    <span className="text-slate-900 text-xs font-medium">Status: All</span>
-                                    <MdExpandMore className="text-slate-900 text-[16px]" />
-                                </button>
+                                <select
+                                    value={status}
+                                    onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
+                                    className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors text-slate-900 text-xs font-medium outline-none appearance-none cursor-pointer pr-8"
+                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                                >
+                                    <option value="All">Status: All</option>
+                                    <option value="pending">Status: Pending</option>
+                                    <option value="completed">Status: Completed</option>
+                                    <option value="cancelled">Status: Cancelled</option>
+                                </select>
                             </div>
                             <div className="relative group">
-                                <button className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors">
-                                    <span className="text-slate-900 text-xs font-medium">Date: Last 30 Days</span>
-                                    <MdExpandMore className="text-slate-900 text-[16px]" />
-                                </button>
+                                <select
+                                    value={dateRange}
+                                    onChange={(e) => { setDateRange(e.target.value); setCurrentPage(1); }}
+                                    className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors text-slate-900 text-xs font-medium outline-none appearance-none cursor-pointer pr-8"
+                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                                >
+                                    <option value="All Time">Date: All Time</option>
+                                    <option value="Today">Date: Today</option>
+                                    <option value="Last 7 Days">Date: Last 7 Days</option>
+                                    <option value="Last 30 Days">Date: Last 30 Days</option>
+                                </select>
                             </div>
                             <div className="relative group">
-                                <button className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors">
-                                    <span className="text-slate-900 text-xs font-medium">Payment: All</span>
-                                    <MdExpandMore className="text-slate-900 text-[16px]" />
-                                </button>
+                                <select
+                                    value={paymentStatus}
+                                    onChange={(e) => { setPaymentStatus(e.target.value); setCurrentPage(1); }}
+                                    className="flex h-8 items-center justify-between gap-x-1.5 rounded bg-background-light border border-transparent hover:border-slate-200 px-2.5 transition-colors text-slate-900 text-xs font-medium outline-none appearance-none cursor-pointer pr-8"
+                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                                >
+                                    <option value="All">Payment: All</option>
+                                    <option value="paid">Payment: Paid</option>
+                                    <option value="unpaid">Payment: Unpaid</option>
+                                    <option value="partial">Payment: Partial</option>
+                                </select>
                             </div>
                             <div className="h-5 w-px bg-slate-200 hidden lg:block mx-0.5"></div>
-                            <button className="flex items-center justify-center size-8 rounded bg-background-light hover:bg-slate-200 transition-colors text-slate-500">
+                            <button
+                                onClick={() => {
+                                    setSearch('');
+                                    setStatus('All');
+                                    setPaymentStatus('All');
+                                    setDateRange('Last 30 Days');
+                                    setCurrentPage(1);
+                                }}
+                                className="flex items-center justify-center size-8 rounded bg-background-light hover:bg-slate-200 transition-colors text-slate-500"
+                                title="Reset Filters"
+                            >
                                 <MdFilterList className="text-[16px]" />
                             </button>
                         </div>
@@ -144,11 +243,13 @@ export default function OrdersPage() {
                                         </th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                                        <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Job Details</th>
+                                        <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Description</th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
                                         <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                        <th className="p-2.5 w-10"></th>
+                                        <th className="p-2.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200">
@@ -158,7 +259,7 @@ export default function OrdersPage() {
                                                 <input className="rounded border-gray-300 text-primary focus:ring-primary bg-white h-3.5 w-3.5" type="checkbox" />
                                             </td>
                                             <td className="p-2.5">
-                                                <a className="text-xs font-semibold text-primary hover:underline" href="#">#{order._id.substring(0, 8)}</a>
+                                                <a className="text-xs font-semibold text-primary hover:underline" href={`/orders/${order._id}`}>#{order._id.substring(0, 8)}</a>
                                             </td>
                                             <td className="p-2.5">
                                                 <div className="flex items-center gap-2">
@@ -168,20 +269,63 @@ export default function OrdersPage() {
                                                     <span className="text-xs font-medium text-slate-900">{order.customer?.name || 'Unknown'}</span>
                                                 </div>
                                             </td>
+                                            <td className="p-2.5 text-xs text-slate-500">{order.customer?.phone || 'N/A'}</td>
                                             <td className="p-2.5 text-xs text-slate-500">
                                                 {order.products?.length || 0} Items
+                                            </td>
+                                            <td className="p-2.5 text-xs text-slate-500 max-w-[150px] truncate" title={order.notes}>
+                                                {order.notes || 'No description'}
                                             </td>
                                             <td className="p-2.5 text-xs text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</td>
                                             <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">${order.totalAmount?.toFixed(2)}</td>
                                             <td className="p-2.5">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                    order.status === 'delivered' ? 'bg-blue-100 text-blue-800' :
+                                                        order.status === 'hold' ? 'bg-orange-100 text-orange-800' :
+                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                'bg-yellow-100 text-yellow-800'
+                                                    }`}>
                                                     {order.status}
                                                 </span>
                                             </td>
                                             <td className="p-2.5">
-                                                <button className="text-slate-500 hover:text-slate-900 p-1 rounded hover:bg-slate-100">
-                                                    <MdMoreVert className="text-[16px]" />
-                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(order._id, 'delivered')}
+                                                        className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-bold transition-colors"
+                                                        title="Mark as Delivered"
+                                                    >
+                                                        Delivered
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(order._id, 'pending')}
+                                                        className="px-1.5 py-0.5 rounded bg-yellow-50 text-yellow-600 hover:bg-yellow-100 text-[10px] font-bold transition-colors"
+                                                        title="Mark as Pending"
+                                                    >
+                                                        Pending
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(order._id, 'completed')}
+                                                        className="px-1.5 py-0.5 rounded bg-green-50 text-green-600 hover:bg-green-100 text-[10px] font-bold transition-colors"
+                                                        title="Mark as Done"
+                                                    >
+                                                        Done
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(order._id, 'hold')}
+                                                        className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 hover:bg-orange-100 text-[10px] font-bold transition-colors"
+                                                        title="Mark as Hold"
+                                                    >
+                                                        Hold
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteOrder(order._id)}
+                                                        className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors"
+                                                        title="Delete Order"
+                                                    >
+                                                        <MdDelete className="text-[16px]" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -191,18 +335,32 @@ export default function OrdersPage() {
                         {/* Pagination */}
                         <div className="px-4 py-2.5 border-t border-slate-200 flex items-center justify-between bg-background-light">
                             <div className="flex items-center gap-2">
-                                <p className="text-[10px] text-slate-500">Showing <span className="font-semibold text-slate-900">1-10</span> of <span className="font-semibold text-slate-900">450</span> orders</p>
+                                <p className="text-[10px] text-slate-500">
+                                    Showing <span className="font-semibold text-slate-900">{(currentPage - 1) * 10 + 1}-{Math.min(currentPage * 10, totalOrders)}</span> of <span className="font-semibold text-slate-900">{totalOrders}</span> orders
+                                </p>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <button className="p-1 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-50">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-1 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-50"
+                                >
                                     <MdChevronLeft className="text-[16px]" />
                                 </button>
-                                <button className="px-2 py-0.5 rounded bg-primary text-white text-xs font-medium">1</button>
-                                <button className="px-2 py-0.5 rounded text-slate-900 hover:bg-slate-200 text-xs font-medium">2</button>
-                                <button className="px-2 py-0.5 rounded text-slate-900 hover:bg-slate-200 text-xs font-medium">3</button>
-                                <span className="text-slate-500 px-0.5 text-xs">...</span>
-                                <button className="px-2 py-0.5 rounded text-slate-900 hover:bg-slate-200 text-xs font-medium">45</button>
-                                <button className="p-1 rounded-md text-slate-500 hover:bg-slate-200">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`px-2 py-0.5 rounded text-xs font-medium ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-slate-900 hover:bg-slate-200'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-1 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-50"
+                                >
                                     <MdChevronRight className="text-[16px]" />
                                 </button>
                             </div>

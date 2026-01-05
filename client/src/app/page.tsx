@@ -1,24 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchOrders } from '@/utils/api';
+import { fetchOrders, fetchDashboardStats } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
 import { MdCalendarToday, MdNotifications, MdAdd, MdPayments, MdTrendingUp, MdPendingActions, MdWarning, MdPrint, MdShoppingCart, MdInventory, MdPersonAdd } from 'react-icons/md';
 
 export default function Dashboard() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    pendingOrders: 0,
+    lowStockProducts: 0,
+    totalProducts: 0
+  });
 
   useEffect(() => {
-    const loadRecentOrders = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchOrders();
-        setRecentOrders(data.slice(0, 5)); // Get top 5
+        const [ordersData, statsData] = await Promise.all([
+          fetchOrders({ limit: 5 }),
+          fetchDashboardStats()
+        ]);
+        setRecentOrders(ordersData.orders || []);
+        setStats(statsData);
       } catch (error) {
-        console.error('Failed to load recent orders', error);
+        console.error('Failed to load dashboard data', error);
       }
     };
-    loadRecentOrders();
+    loadData();
   }, []);
 
   return (
@@ -58,9 +68,10 @@ export default function Dashboard() {
                 <MdPayments className="text-4xl text-primary" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Total Revenue</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">$0.00</p>
-              <div className="flex items-center gap-1 text-slate-400 text-[10px] font-medium">
-                <span>No data</span>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">${stats.totalRevenue.toFixed(2)}</p>
+              <div className="flex items-center gap-1 text-green-600 text-[10px] font-medium">
+                <MdTrendingUp />
+                <span>+0%</span>
               </div>
             </div>
             {/* Pending Orders */}
@@ -69,8 +80,8 @@ export default function Dashboard() {
                 <MdPendingActions className="text-4xl text-amber-500" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Pending Orders</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">0</p>
-              <p className="text-slate-400 text-[10px] font-medium">No data</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">{stats.pendingOrders}</p>
+              <p className="text-slate-400 text-[10px] font-medium">Orders to process</p>
             </div>
             {/* Low Stock Alerts */}
             <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-1 relative overflow-hidden group">
@@ -78,17 +89,17 @@ export default function Dashboard() {
                 <MdWarning className="text-4xl text-red-500" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Low Stock Alerts</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">0 Items</p>
-              <p className="text-slate-400 text-[10px] font-medium">No alerts</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">{stats.lowStockProducts} Items</p>
+              <p className="text-slate-400 text-[10px] font-medium">Needs attention</p>
             </div>
             {/* Active Printers */}
             <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-1 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                 <MdPrint className="text-4xl text-blue-500" />
               </div>
-              <p className="text-gray-500 text-xs font-medium">Active Printers</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">0/0</p>
-              <p className="text-slate-400 text-[10px] font-medium">No data</p>
+              <p className="text-gray-500 text-xs font-medium">Total Products</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">{stats.totalProducts}</p>
+              <p className="text-slate-400 text-[10px] font-medium">In inventory</p>
             </div>
           </div>
 

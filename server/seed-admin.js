@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
+    isAdmin: { type: Boolean, default: true }
 }, { timestamps: true });
 
 // Pre-save hook to hash password
@@ -39,17 +40,38 @@ const seedAdmin = async () => {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             console.log('Admin user already exists');
-            // Optional: Update password if needed
-            // existingUser.password = password;
-            // await existingUser.save();
-            // console.log('Admin password updated');
+            existingUser.isAdmin = true;
+            existingUser.password = 'adminpassword'; // Reset password to known value
+            await existingUser.save();
+            console.log('Admin user updated with isAdmin: true and password reset');
         } else {
             await User.create({
                 name: 'Admin',
                 email,
-                password
+                password,
+                isAdmin: true
             });
             console.log('Admin user created successfully');
+        }
+
+        // Create Test Admin
+        const testEmail = 'testadmin@example.com';
+        const testPassword = 'adminpassword';
+
+        const existingTestUser = await User.findOne({ email: testEmail });
+        if (existingTestUser) {
+            existingTestUser.password = testPassword;
+            existingTestUser.isAdmin = true;
+            await existingTestUser.save();
+            console.log('Test Admin updated');
+        } else {
+            await User.create({
+                name: 'Test Admin',
+                email: testEmail,
+                password: testPassword,
+                isAdmin: true
+            });
+            console.log('Test Admin created');
         }
 
         process.exit(0);

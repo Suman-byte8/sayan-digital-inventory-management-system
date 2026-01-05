@@ -1,0 +1,2 @@
+[2025-12-22T16:39:40.950Z] Creating order with body: {"customer":"694973bab6c04321c865cf17","products":[{"product":"","quantity":7,"price":130},{"product":"","quantity":5,"price":950}],"totalAmount":6226,"status":"pending","paymentStatus":"unpaid","notes":""}
+[2025-12-22T16:39:40.955Z] Error creating order: Order validation failed: products.0.product: Cast to ObjectId failed for value "" (type string) at path "product" because of "BSONError", products.1.product: Cast to ObjectId failed for value "" (type string) at path "product" because of "BSONError"

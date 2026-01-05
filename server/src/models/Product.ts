@@ -7,6 +7,7 @@ export interface IProduct extends Document {
     sellingPrice: number;
     category: string;
     inStock: boolean;
+    quantity: number;
     imageUrl?: string;
 }
 
@@ -17,6 +18,7 @@ const ProductSchema: Schema = new Schema({
     sellingPrice: { type: Number, required: true },
     category: { type: String, required: true },
     inStock: { type: Boolean, required: true },
+    quantity: { type: Number, required: true, default: 0 },
     imageUrl: { type: String },
 });
 

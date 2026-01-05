@@ -101,6 +101,12 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
             return;
         }
 
+        const invalidItems = items.filter(item => !item.productId);
+        if (invalidItems.length > 0) {
+            alert('Please select a product for all items in the list');
+            return;
+        }
+
         setIsSaving(true);
         try {
             const orderData = {
@@ -111,7 +117,9 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                     price: item.price
                 })),
                 totalAmount: grandTotal,
-                status: paymentStatus === 'paid' ? 'completed' : 'pending'
+                status: paymentStatus === 'paid' ? 'completed' : 'pending',
+                paymentStatus: paymentStatus,
+                notes: notes
             };
 
             await createOrder(orderData);
@@ -186,7 +194,7 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                 </div>
 
                 <div className="p-5 overflow-y-auto custom-scrollbar">
-                    <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+                    <div className="flex flex-col gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1.5 relative">
                                 <label className="text-xs font-semibold text-slate-900">Customer Phone</label>
@@ -250,14 +258,6 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                             </div>
                         </div>
 
-                        <AddCustomerModal
-                            isOpen={isAddCustomerModalOpen}
-                            onClose={() => setIsAddCustomerModalOpen(false)}
-                            onSuccess={(newCust) => {
-                                setSelectedCustomer(newCust);
-                                setCustomerSearch(newCust.phone);
-                            }}
-                        />
 
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center justify-between">
@@ -407,8 +407,17 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                                 </div>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
+
+                <AddCustomerModal
+                    isOpen={isAddCustomerModalOpen}
+                    onClose={() => setIsAddCustomerModalOpen(false)}
+                    onSuccess={(newCust) => {
+                        setSelectedCustomer(newCust);
+                        setCustomerSearch(newCust.phone);
+                    }}
+                />
 
                 <div className="px-5 py-3 border-t border-slate-200 bg-white flex justify-end gap-2.5 rounded-b-xl flex-shrink-0">
                     <button

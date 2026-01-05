@@ -38,6 +38,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
         address: '',
         status: 'Active'
     });
+    const [noAddress, setNoAddress] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -50,6 +51,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
                 address: editCustomer.address || '',
                 status: editCustomer.status || 'Active'
             });
+            setNoAddress(editCustomer.address === 'N/A');
         } else {
             setCustomer({
                 name: '',
@@ -59,6 +61,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
                 address: '',
                 status: 'Active'
             });
+            setNoAddress(false);
         }
     }, [editCustomer, isOpen]);
 
@@ -68,20 +71,35 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
             return;
         }
 
+        if (!noAddress && !customer.address) {
+            alert('Please provide an address or check "No Address"');
+            return;
+        }
+
         setIsSaving(true);
+        const finalCustomer = {
+            ...customer,
+            address: noAddress ? 'N/A' : customer.address
+        };
+
         try {
             let savedCustomer;
             if (editCustomer) {
-                savedCustomer = await updateCustomer(editCustomer.id || editCustomer._id, customer);
+                savedCustomer = await updateCustomer(editCustomer.id || editCustomer._id, finalCustomer);
             } else {
-                savedCustomer = await createCustomer(customer);
+                savedCustomer = await createCustomer(finalCustomer);
             }
             onSuccess(savedCustomer);
             onClose();
         } catch (error: any) {
             console.error('Error saving customer:', error);
-            if (error.response && error.response.data && error.response.data.message === 'Mobile number already exists') {
+            const errorMessage = error.response?.data?.message;
+            if (errorMessage === 'Mobile number already exists') {
                 alert('Mobile number already exists. Please use a different number or search for the existing customer.');
+            } else if (errorMessage === 'Email address already exists') {
+                alert('Email address already exists. Please use a different email or search for the existing customer.');
+            } else if (errorMessage?.includes('Duplicate field error')) {
+                alert(errorMessage);
             } else {
                 alert(`Error ${editCustomer ? 'updating' : 'creating'} customer`);
             }
@@ -179,15 +197,30 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
                         </div>
 
                         <label className="block">
-                            <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Address</span>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-xs font-semibold text-slate-700 block">Address</span>
+                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={noAddress}
+                                        onChange={(e) => {
+                                            setNoAddress(e.target.checked);
+                                            if (e.target.checked) setCustomer({ ...customer, address: '' });
+                                        }}
+                                        className="rounded border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5"
+                                    />
+                                    <span className="text-[10px] font-medium text-slate-500">No Address</span>
+                                </label>
+                            </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-3 text-slate-400">
                                     <MdLocationOn className="text-[18px]" />
                                 </span>
                                 <textarea
-                                    className="w-full pl-9 pr-3 py-2.5 min-h-[100px] rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all resize-y"
-                                    placeholder="Enter full billing address..."
+                                    className={`w-full pl-9 pr-3 py-2.5 min-h-[100px] rounded-lg border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-primary focus:ring-primary/20 transition-all resize-y ${noAddress ? 'opacity-50 pointer-events-none' : ''}`}
+                                    placeholder={noAddress ? 'Address not required' : 'Enter full billing address...'}
                                     value={customer.address}
+                                    disabled={noAddress}
                                     onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
                                 ></textarea>
                             </div>

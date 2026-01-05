@@ -30,7 +30,11 @@ export interface Category {
 export const fetchProducts = async (): Promise<Product[]> => {
     try {
         const response = await axios.get(`${API_URL}/products`);
-        return response.data;
+        // Handle paginated response
+        if (response.data.products && Array.isArray(response.data.products)) {
+            return response.data.products;
+        }
+        return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
         console.error('Error fetching products:', error);
         return [];
@@ -201,16 +205,17 @@ export const deleteCustomer = async (id: string): Promise<void> => {
     }
 };
 
-export const fetchOrders = async (): Promise<any[]> => {
+export const fetchOrders = async (params: any = {}): Promise<any> => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/orders`, {
+        const queryString = new URLSearchParams(params).toString();
+        const response = await axios.get(`${API_URL}/orders?${queryString}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
     } catch (error) {
         console.error('Error fetching orders:', error);
-        return [];
+        return { orders: [], total: 0, page: 1, pages: 1 };
     }
 };
 
@@ -223,6 +228,31 @@ export const createOrder = async (order: any): Promise<any> => {
         return response.data;
     } catch (error) {
         console.error('Error creating order:', error);
+        throw error;
+    }
+};
+
+export const updateOrder = async (id: string, order: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/orders/${id}`, order, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating order:', error);
+        throw error;
+    }
+};
+
+export const deleteOrder = async (id: string): Promise<void> => {
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_URL}/orders/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch (error) {
+        console.error('Error deleting order:', error);
         throw error;
     }
 };
@@ -250,5 +280,128 @@ export const createInvoice = async (invoice: any): Promise<any> => {
     } catch (error) {
         console.error('Error creating invoice:', error);
         throw error;
+    }
+};
+
+// Suppliers
+export const fetchSuppliers = async (): Promise<any[]> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/suppliers`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        return [];
+    }
+};
+
+export const createSupplier = async (supplier: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${API_URL}/suppliers`, supplier, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating supplier:', error);
+        throw error;
+    }
+};
+
+export const updateSupplier = async (id: string, supplier: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/suppliers/${id}`, supplier, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating supplier:', error);
+        throw error;
+    }
+};
+
+export const deleteSupplier = async (id: string): Promise<void> => {
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_URL}/suppliers/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch (error) {
+        console.error('Error deleting supplier:', error);
+        throw error;
+    }
+};
+
+// Stock Movements
+export const fetchStockMovements = async (): Promise<any[]> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/stock-movements`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching stock movements:', error);
+        return [];
+    }
+};
+
+export const createStockMovement = async (movement: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${API_URL}/stock-movements`, movement, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating stock movement:', error);
+        throw error;
+    }
+};
+
+// Reports
+export const fetchDashboardStats = async (): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/reports/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        return { totalRevenue: 0, pendingOrders: 0, lowStockProducts: 0, totalProducts: 0 };
+    }
+};
+
+export const fetchSalesReport = async (startDate?: string, endDate?: string): Promise<any[]> => {
+    try {
+        const token = localStorage.getItem('token');
+        let query = '';
+        if (startDate && endDate) {
+            query = `?startDate=${startDate}&endDate=${endDate}`;
+        }
+        const response = await axios.get(`${API_URL}/reports/sales${query}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching sales report:', error);
+        return [];
+    }
+};
+
+export const fetchInventoryReport = async (): Promise<any[]> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/reports/inventory`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching inventory report:', error);
+        return [];
     }
 };

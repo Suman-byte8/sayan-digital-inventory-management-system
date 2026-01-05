@@ -72,6 +72,26 @@ const Sidebar = () => {
                     <span className={`text-sm font-medium ${isActive('/customers') ? '' : 'group-hover:text-slate-900'}`}>Customers</span>
                 </Link>
                 <Link
+                    href="/suppliers"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive('/suppliers')
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                >
+                    <MdPeople className={`text-[20px] ${isActive('/suppliers') ? '' : 'group-hover:text-slate-900'}`} />
+                    <span className={`text-sm font-medium ${isActive('/suppliers') ? '' : 'group-hover:text-slate-900'}`}>Suppliers</span>
+                </Link>
+                <Link
+                    href="/reports"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive('/reports')
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                >
+                    <MdBarChart className={`text-[20px] ${isActive('/reports') ? '' : 'group-hover:text-slate-900'}`} />
+                    <span className={`text-sm font-medium ${isActive('/reports') ? '' : 'group-hover:text-slate-900'}`}>Reports</span>
+                </Link>
+                <Link
                     href="/invoice"
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive('/invoice')
                         ? 'bg-primary/10 text-primary'

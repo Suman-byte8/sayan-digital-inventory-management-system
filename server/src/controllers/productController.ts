@@ -3,8 +3,39 @@ import Product from '../models/Product';
 
 export const getProducts = async (req: Request, res: Response) => {
     try {
-        const products = await Product.find();
-        res.status(200).json(products);
+        const { page = 1, limit = 10, search, category, sort } = req.query;
+
+        const query: any = {};
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        if (category) {
+            query.category = category;
+        }
+
+        const sortOptions: any = {};
+        if (sort) {
+            const [field, order] = (sort as string).split(':');
+            sortOptions[field] = order === 'desc' ? -1 : 1;
+        } else {
+            sortOptions.createdAt = -1;
+        }
+
+        const products = await Product.find(query)
+            .sort(sortOptions)
+            .limit(Number(limit))
+            .skip((Number(page) - 1) * Number(limit));
+
+        const total = await Product.countDocuments(query);
+
+        res.status(200).json({
+            products,
+            total,
+            page: Number(page),
+            pages: Math.ceil(total / Number(limit))
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching products', error });
     }

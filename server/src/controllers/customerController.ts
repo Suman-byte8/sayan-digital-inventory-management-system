@@ -32,9 +32,17 @@ export const createCustomer = async (req: Request, res: Response) => {
 
         // Check if customer with same phone already exists
         if (phone) {
-            const existingCustomer = await Customer.findOne({ phone });
-            if (existingCustomer) {
+            const existingPhone = await Customer.findOne({ phone });
+            if (existingPhone) {
                 return res.status(400).json({ message: 'Mobile number already exists' });
+            }
+        }
+
+        // Check if customer with same email already exists
+        if (email) {
+            const existingEmail = await Customer.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email address already exists' });
             }
         }
 
@@ -42,7 +50,19 @@ export const createCustomer = async (req: Request, res: Response) => {
         await customer.save();
         res.status(201).json(customer);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating customer', error });
+        const errorMsg = error instanceof Error ? error.message : String(error);
+
+        // Handle Mongoose validation errors
+        if (errorMsg.includes('validation failed') || errorMsg.includes('is required')) {
+            return res.status(400).json({ message: 'Validation Error', error: errorMsg });
+        }
+
+        // Handle Mongoose duplicate key error (E11000)
+        if (errorMsg.includes('E11000')) {
+            return res.status(400).json({ message: 'Duplicate field error: A customer with this information already exists.' });
+        }
+
+        res.status(500).json({ message: 'Error creating customer', error: errorMsg });
     }
 };
 
@@ -54,12 +74,21 @@ export const searchCustomerByPhone = async (req: Request, res: Response) => {
         const searchStr = phone as string;
         let customers = [];
 
-        // 1. Try exact phone match
-        customers = await Customer.find({ phone: searchStr });
+        // Normalize search string: remove +91 prefix if present for searching
+        const normalizedSearch = searchStr.replace(/^\+91/, '').trim();
+
+        // 1. Try exact phone match (with and without +91)
+        customers = await Customer.find({
+            $or: [
+                { phone: searchStr },
+                { phone: normalizedSearch },
+                { phone: `+91${normalizedSearch}` }
+            ]
+        });
 
         // 2. Try regex phone match (ignore non-numeric characters)
         if (customers.length === 0) {
-            const numericPhone = searchStr.replace(/\D/g, '');
+            const numericPhone = normalizedSearch.replace(/\D/g, '');
             if (numericPhone.length > 0) {
                 // Create a regex that matches the digits in order with anything in between
                 const phoneRegex = new RegExp(numericPhone.split('').join('.*'));
@@ -72,8 +101,7 @@ export const searchCustomerByPhone = async (req: Request, res: Response) => {
             customers = await Customer.find({ name: { $regex: new RegExp(searchStr, 'i') } });
         }
 
-        if (customers.length === 0) return res.status(404).json({ message: 'Customer not found' });
-
+        // Return empty array instead of 404 to avoid frontend errors
         res.json(customers);
     } catch (error) {
         console.error('Error in searchCustomerByPhone:', error);
