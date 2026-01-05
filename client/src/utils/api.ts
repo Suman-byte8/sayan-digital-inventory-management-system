@@ -167,6 +167,19 @@ export const searchCustomerByPhone = async (phone: string): Promise<any> => {
     }
 };
 
+export const searchCustomers = async (query: string): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/customers/search/phone?phone=${query}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error searching customers:', error);
+        throw error;
+    }
+};
+
 export const createCustomer = async (customer: any): Promise<any> => {
     try {
         const token = localStorage.getItem('token');

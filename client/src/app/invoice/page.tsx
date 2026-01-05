@@ -135,8 +135,7 @@ export default function InvoicePage() {
     };
 
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.10;
-    const grandTotal = subtotal + tax;
+    const grandTotal = subtotal;
 
     const handleDownloadPDF = async () => {
         if (!invoiceRef.current) return;
@@ -148,6 +147,12 @@ export default function InvoicePage() {
                 useCORS: true,
                 allowTaint: true,
                 onclone: (clonedDoc) => {
+                    // Hide action buttons in PDF
+                    const actionButtons = clonedDoc.querySelectorAll('button');
+                    actionButtons.forEach(btn => {
+                        (btn as HTMLElement).style.display = 'none';
+                    });
+
                     const elements = clonedDoc.getElementsByTagName('*');
                     for (let i = 0; i < elements.length; i++) {
                         const el = elements[i] as HTMLElement;
@@ -482,26 +487,26 @@ export default function InvoicePage() {
                                             </div>
                                             <span className="text-base font-bold tracking-tight text-slate-900">Sayan Digital</span>
                                         </div>
-                                        <p className="text-[10px] text-slate-500">123 Printing Press Lane<br />New York, NY 10012<br />contact@Sayan Digital.com</p>
+                                        <p className="text-xs text-slate-500">123 Printing Press Lane<br />New York, NY 10012<br />contact@Sayan Digital.com</p>
                                     </div>
                                     <div className="text-right">
                                         <h3 className="text-xl font-bold text-slate-900 mb-0.5">INVOICE</h3>
-                                        <p className="text-[10px] text-primary font-medium">#DRAFT</p>
-                                        <p className="text-[10px] text-slate-500 mt-0.5">Date: {new Date().toLocaleDateString()}</p>
+                                        <p className="text-xs text-primary font-medium">#DRAFT</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Date: {new Date().toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 {/* Bill To Section */}
-                                <div className="mb-5 p-2.5 bg-slate-50 rounded border border-slate-100 min-h-[80px]">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Bill To</p>
+                                <div className="mb-6 p-4 bg-slate-50 rounded border border-slate-100 min-h-[100px]">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bill To</p>
                                     {selectedCustomer ? (
-                                        <>
-                                            <h4 className="text-xs font-bold text-slate-900">{selectedCustomer.name}</h4>
-                                            <p className="text-[10px] text-slate-600">{selectedCustomer.email}</p>
-                                            <p className="text-[10px] text-slate-600">{selectedCustomer.phone}</p>
-                                            <p className="text-[10px] text-slate-600">{selectedCustomer.address}</p>
-                                        </>
+                                        <div className="space-y-1.5">
+                                            <h4 className="text-sm font-bold text-slate-900">{selectedCustomer.name}</h4>
+                                            <p className="text-xs text-slate-600">{selectedCustomer.email}</p>
+                                            <p className="text-xs text-slate-600">{selectedCustomer.phone}</p>
+                                            <p className="text-xs text-slate-600 leading-relaxed">{selectedCustomer.address}</p>
+                                        </div>
                                     ) : (
-                                        <p className="text-[10px] text-slate-400 italic">Select a customer to view details</p>
+                                        <p className="text-xs text-slate-400 italic">Select a customer to view details</p>
                                     )}
                                 </div>
                                 {/* Items Table */}
@@ -509,13 +514,13 @@ export default function InvoicePage() {
                                     <table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="border-b border-slate-200">
-                                                <th className="py-1.5 px-2 text-[9px] font-semibold text-slate-500 uppercase tracking-wider w-1/2">Item Description</th>
-                                                <th className="py-1.5 px-2 text-[9px] font-semibold text-slate-500 uppercase tracking-wider text-right">Qty</th>
-                                                <th className="py-1.5 px-2 text-[9px] font-semibold text-slate-500 uppercase tracking-wider text-right">Rate</th>
-                                                <th className="py-1.5 px-2 text-[9px] font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
+                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-1/2">Item Description</th>
+                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Qty</th>
+                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Rate</th>
+                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Amount</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="text-[10px] text-slate-700">
+                                        <tbody className="text-xs text-slate-700">
                                             {items.length > 0 ? (
                                                 items.map((item) => (
                                                     <tr key={item.id} className="border-b border-slate-100 last:border-0">
@@ -538,14 +543,6 @@ export default function InvoicePage() {
                                 {/* Summary Block */}
                                 <div className="mt-auto flex justify-end">
                                     <div className="w-full max-w-[200px] space-y-1.5">
-                                        <div className="flex justify-between text-[10px] text-slate-600">
-                                            <span>Subtotal</span>
-                                            <span className="font-medium tabular-nums">${subtotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px] text-slate-600">
-                                            <span>Tax (10%)</span>
-                                            <span className="font-medium tabular-nums">${tax.toFixed(2)}</span>
-                                        </div>
                                         <div className="pt-1.5 border-t border-slate-200 flex justify-between items-center">
                                             <span className="text-xs font-bold text-slate-900">Grand Total</span>
                                             <span className="text-sm font-bold text-primary tabular-nums">${grandTotal.toFixed(2)}</span>
@@ -557,7 +554,7 @@ export default function InvoicePage() {
                             <div className="bg-slate-50 border-t border-slate-200 p-2.5 px-5 flex flex-wrap gap-2 items-center justify-between no-print">
                                 <button
                                     onClick={handleClearForm}
-                                    className="text-[10px] font-medium text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
+                                    className="text-[10px] font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1"
                                 >
                                     <MdDelete className="text-[14px]" /> Clear Form
                                 </button>
@@ -572,7 +569,7 @@ export default function InvoicePage() {
                                     <button
                                         onClick={handleGenerateInvoice}
                                         disabled={isGenerating}
-                                        className="h-8 px-4 rounded bg-primary hover:bg-blue-700 text-white font-medium text-[10px] shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                                        className="h-8 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-[10px] shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
                                     >
                                         <MdReceiptLong className="text-[14px]" />
                                         {isGenerating ? 'Generating...' : 'Generate & Download'}
