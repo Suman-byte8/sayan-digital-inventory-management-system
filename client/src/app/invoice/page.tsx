@@ -12,8 +12,7 @@ import {
     MdReceiptLong,
     MdCheckCircle,
     MdPersonAdd,
-    MdDownload,
-    MdShare
+    MdDownload
 } from 'react-icons/md';
 
 import { useState, useEffect, useRef } from 'react';
@@ -137,8 +136,8 @@ export default function InvoicePage() {
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const grandTotal = subtotal;
 
-    const handleDownloadPDF = async () => {
-        if (!invoiceRef.current) return;
+    const generatePDF = async () => {
+        if (!invoiceRef.current) return null;
 
         try {
             const canvas = await html2canvas(invoiceRef.current, {
@@ -190,27 +189,27 @@ export default function InvoicePage() {
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-            pdf.save(`invoice-${Date.now()}.pdf`);
+            return pdf;
         } catch (error: any) {
             console.error('Error generating PDF:', error);
             if (error instanceof Error) {
                 console.error('Error Message:', error.message);
                 console.error('Error Stack:', error.stack);
             }
+            return null;
+        }
+    };
+
+    const handleDownloadPDF = async () => {
+        const pdf = await generatePDF();
+        if (pdf) {
+            pdf.save(`invoice-${Date.now()}.pdf`);
+        } else {
             alert('Failed to generate PDF. Check console for details.');
         }
     };
 
-    const handleWhatsAppShare = () => {
-        if (!selectedCustomer || !selectedCustomer.phone) {
-            alert('Please select a customer with a phone number');
-            return;
-        }
 
-        const message = `Hi ${selectedCustomer.name}, here is your invoice for $${grandTotal.toFixed(2)}. Please find the attached PDF.`;
-        const whatsappUrl = `https://wa.me/${selectedCustomer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-    };
 
     const handleClearForm = () => {
         if (window.confirm('Are you sure you want to clear the form?')) {
@@ -574,13 +573,6 @@ export default function InvoicePage() {
                                     <MdDelete className="text-[14px]" /> Clear Form
                                 </button>
                                 <div className="flex gap-2">
-                                    <button
-                                        onClick={handleWhatsAppShare}
-                                        className="h-8 px-3 rounded border border-green-600 text-green-700 hover:bg-green-50 font-medium text-[10px] flex items-center gap-1.5 transition-colors"
-                                    >
-                                        <MdShare className="text-[14px]" />
-                                        WhatsApp
-                                    </button>
                                     <button
                                         onClick={handleGenerateInvoice}
                                         disabled={isGenerating}
