@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { fetchOrders, updateOrder, deleteOrder } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
+import { useSettings } from '@/context/SettingsContext';
+import { useMemo } from 'react';
 import {
     MdAdd,
     MdPendingActions,
@@ -28,6 +30,18 @@ export default function OrdersPage() {
     const [status, setStatus] = useState('All');
     const [paymentStatus, setPaymentStatus] = useState('All');
     const [dateRange, setDateRange] = useState('Last 30 Days');
+
+    const { settings } = useSettings();
+    const currencySymbol = useMemo(() => {
+        if (!settings?.currency) return '$';
+        switch (settings.currency) {
+            case 'INR': return '₹';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            default: return '$';
+        }
+    }, [settings?.currency]);
 
     const loadOrders = async () => {
         setLoading(true);
@@ -151,7 +165,7 @@ export default function OrdersPage() {
                             </div>
                             <div className="flex items-baseline gap-2 mt-1">
                                 <p className="text-slate-900 text-2xl font-bold">
-                                    ${orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {currencySymbol}{orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                                 <span className="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 rounded">This page</span>
                             </div>
@@ -277,7 +291,7 @@ export default function OrdersPage() {
                                                 {order.notes || 'No description'}
                                             </td>
                                             <td className="p-2.5 text-xs text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</td>
-                                            <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">${order.totalAmount?.toFixed(2)}</td>
+                                            <td className="p-2.5 text-xs font-semibold text-slate-900 text-right">{currencySymbol}{order.totalAmount?.toFixed(2)}</td>
                                             <td className="p-2.5">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
                                                     order.status === 'delivered' ? 'bg-blue-100 text-blue-800' :

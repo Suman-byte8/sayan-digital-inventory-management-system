@@ -66,13 +66,8 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
     }, [editCustomer, isOpen]);
 
     const handleSave = async () => {
-        if (!customer.name || !customer.email) {
-            alert('Please fill in at least Name and Email');
-            return;
-        }
-
-        if (!noAddress && !customer.address) {
-            alert('Please provide an address or check "No Address"');
+        if (!customer.name || !customer.phone) {
+            alert('Please fill in at least Name and Phone Number');
             return;
         }
 
@@ -147,7 +142,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
                                 </div>
                             </label>
                             <label className="block">
-                                <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Company Name</span>
+                                <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Company Name <span className="text-slate-400 font-normal">(Optional)</span></span>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                         <MdBusiness className="text-[18px]" />
@@ -165,7 +160,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <label className="block">
-                                <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Email Address</span>
+                                <span className="text-xs font-semibold text-slate-700 mb-1.5 block">Email Address <span className="text-slate-400 font-normal">(Optional)</span></span>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                         <MdEmail className="text-[18px]" />
@@ -198,7 +193,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editCusto
 
                         <label className="block">
                             <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-xs font-semibold text-slate-700 block">Address</span>
+                                <span className="text-xs font-semibold text-slate-700 block">Address <span className="text-slate-400 font-normal">(Optional)</span></span>
                                 <label className="flex items-center gap-1.5 cursor-pointer">
                                     <input
                                         type="checkbox"

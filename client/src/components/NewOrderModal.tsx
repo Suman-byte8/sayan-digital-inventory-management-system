@@ -101,9 +101,9 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
             return;
         }
 
-        const invalidItems = items.filter(item => !item.productId);
+        const invalidItems = items.filter(item => !item.productName);
         if (invalidItems.length > 0) {
-            alert('Please select a product for all items in the list');
+            alert('Please enter a product name for all items in the list');
             return;
         }
 
@@ -112,7 +112,8 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
             const orderData = {
                 customer: selectedCustomer._id,
                 products: items.map(item => ({
-                    product: item.productId,
+                    product: item.productId || undefined,
+                    name: item.productName,
                     quantity: item.quantity,
                     price: item.price
                 })),
@@ -289,7 +290,13 @@ export default function NewOrderModal({ isOpen, onClose }: NewOrderModalProps) {
                                                     placeholder="Search product..."
                                                     value={item.productName}
                                                     onChange={(e) => {
-                                                        updateItem(item.id, 'productName', e.target.value);
+                                                        // Update name and clear ID to allow custom entry
+                                                        setItems(items.map(i => {
+                                                            if (i.id === item.id) {
+                                                                return { ...i, productName: e.target.value, productId: '' };
+                                                            }
+                                                            return i;
+                                                        }));
                                                         setActiveProductSearch(item.id);
                                                     }}
                                                     onFocus={() => setActiveProductSearch(item.id)}

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchOrders, updateOrder, deleteOrder } from '@/utils/api';
+import { useSettings } from '@/context/SettingsContext';
+import { useMemo } from 'react';
 import {
     MdArrowBack,
     MdPerson,
@@ -25,6 +27,18 @@ export default function OrderDetailsPage() {
     const router = useRouter();
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
+    const { settings } = useSettings();
+    const currencySymbol = useMemo(() => {
+        if (!settings?.currency) return '$';
+        switch (settings.currency) {
+            case 'INR': return '₹';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            default: return '$';
+        }
+    }, [settings?.currency]);
 
     const loadOrder = async () => {
         try {
@@ -115,8 +129,8 @@ export default function OrderDetailsPage() {
                                         key={s.value}
                                         onClick={() => handleUpdateStatus(s.value)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all font-medium ${order.status === s.value
-                                                ? `bg-${s.color}-50 border-${s.color}-200 text-${s.color}-700 ring-2 ring-${s.color}-500 ring-offset-2`
-                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                            ? `bg-${s.color}-50 border-${s.color}-200 text-${s.color}-700 ring-2 ring-${s.color}-500 ring-offset-2`
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                                             }`}
                                     >
                                         <s.icon className="text-lg" />
@@ -149,21 +163,21 @@ export default function OrderDetailsPage() {
                                                         <MdReceipt className="text-xl" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-slate-900">{item.product?.name || 'Unknown Product'}</p>
+                                                        <p className="text-sm font-bold text-slate-900">{item.name || item.product?.name || 'Unknown Product'}</p>
                                                         <p className="text-xs text-slate-500">{item.product?.category || 'General'}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-slate-600 text-center font-medium">{item.quantity}</td>
-                                            <td className="px-6 py-4 text-sm text-slate-600 text-right font-medium">${item.price.toFixed(2)}</td>
-                                            <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right">${(item.quantity * item.price).toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-sm text-slate-600 text-right font-medium">{currencySymbol}{item.price.toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right">{currencySymbol}{(item.quantity * item.price).toFixed(2)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                                 <tfoot className="bg-slate-50">
                                     <tr>
                                         <td colSpan={3} className="px-6 py-4 text-sm font-bold text-slate-900 text-right">Grand Total</td>
-                                        <td className="px-6 py-4 text-lg font-black text-primary text-right">${order.totalAmount.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-lg font-black text-primary text-right">{currencySymbol}{order.totalAmount.toFixed(2)}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -226,7 +240,7 @@ export default function OrderDetailsPage() {
                                 </div>
                                 <div className="flex justify-between items-center pt-3 border-t border-white/20">
                                     <span className="font-medium">Total Amount</span>
-                                    <span className="text-xl font-black">${order.totalAmount.toFixed(2)}</span>
+                                    <span className="text-xl font-black">{currencySymbol}{order.totalAmount.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
