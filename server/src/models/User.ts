@@ -6,6 +6,10 @@ export interface IUser extends Document {
     password: string;
     name: string;
     isAdmin: boolean;
+    phone?: string;
+    address?: string;
+    avatar?: string;
+    role: string;
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -14,6 +18,10 @@ const UserSchema: Schema = new Schema({
     password: { type: String, required: true },
     name: { type: String, required: true },
     isAdmin: { type: Boolean, required: true, default: true },
+    phone: { type: String },
+    address: { type: String },
+    avatar: { type: String },
+    role: { type: String, default: 'Admin' },
 }, { timestamps: true });
 
 UserSchema.pre('save', async function (this: IUser) {

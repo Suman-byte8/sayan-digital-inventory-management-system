@@ -19,10 +19,91 @@ import {
     MdSettingsApplications,
     MdBackup
 } from 'react-icons/md';
+import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect, useRef } from 'react';
 
 export default function AdminProfilePage() {
+    const { user, updateUser, loading } = useAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        role: ''
+    });
+    const [isSaving, setIsSaving] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                address: user.address || '',
+                role: user.role || 'Admin'
+            });
+        }
+    }, [user]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setMessage({ type: '', text: '' });
+        try {
+            await updateUser(formData);
+            setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to update profile.' });
+        } finally {
+            setIsSaving(false);
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        }
+    };
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsSaving(true);
+        setMessage({ type: '', text: '' });
+
+        const avatarFormData = new FormData();
+        avatarFormData.append('avatar', file);
+
+        try {
+            await updateUser(avatarFormData);
+            setMessage({ type: 'success', text: 'Avatar updated successfully!' });
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to update avatar.' });
+        } finally {
+            setIsSaving(false);
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        }
+    };
+
+    if (loading) {
+        return <div className="flex-1 flex items-center justify-center">Loading...</div>;
+    }
+
     return (
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+            />
             <div className="flex-1 overflow-y-auto scroll-smooth">
                 <div className="max-w-5xl mx-auto p-4 md:p-6">
                     {/* Header */}
@@ -37,26 +118,37 @@ export default function AdminProfilePage() {
                                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">Admin Settings</h1>
                                 <p className="text-slate-500 text-xs mt-0.5">Manage your account security, personal details, and system access.</p>
                             </div>
-                            <button className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-blue-500/20">
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-50"
+                            >
                                 <span className="text-[16px]"><MdEdit /></span>
-                                Save Changes
+                                {isSaving ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
+                        {message.text && (
+                            <div className={`mt-4 p-2 rounded text-xs font-bold ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {message.text}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                         {/* Sidebar / Navigation */}
                         <div className="lg:col-span-3 flex flex-col gap-4 sticky top-4">
                             <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col items-center text-center shadow-sm">
-                                <div className="relative mb-3 group cursor-pointer">
-                                    <div className="size-20 rounded-full bg-slate-200 bg-cover bg-center border-4 border-white shadow-md" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAjNU-E7ZdaUIoFflrpOJuJzdhfTP1HYoobwa_7eTH3VdLQFb3hAUZ0aJk3m3MrzeUL9cMssWkmN_JyJrSfDYM4w9Q_Xsd89pWo9_3zUkSTww_PWev28RrbiBqK4XEpLEZukJDBhNDSNM2qLmiSUgQ6XwYpVOU9Mey-qWpQjcp01FMnPrEAwGezMNfY5hKno-cUd43eFspE2YRkk2o1glbWXLx6pMSYK1Dq8srDDHryS7GszTFUQyZVF-wwjmrBUwldo__xrVDMeqM")' }}></div>
+                                <div className="relative mb-3 group cursor-pointer" onClick={handleAvatarClick}>
+                                    <div className="size-20 rounded-full bg-slate-200 bg-cover bg-center border-4 border-white shadow-md" style={{ backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none' }}>
+                                        {!user?.avatar && <MdPerson className="size-full p-4 text-slate-400" />}
+                                    </div>
                                     <div className="absolute bottom-0 right-0 p-1 bg-primary rounded-full text-white shadow-sm group-hover:scale-110 transition-transform">
                                         <span className="text-[12px] flex"><MdEdit /></span>
                                     </div>
                                 </div>
-                                <h2 className="text-base font-bold text-slate-900">Jane Doe</h2>
-                                <p className="text-xs text-slate-500 mb-2">jane.doe@Sayan Digital.com</p>
-                                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-primary text-[10px] font-bold uppercase tracking-wide border border-blue-100">Super Admin</span>
+                                <h2 className="text-base font-bold text-slate-900">{user?.name}</h2>
+                                <p className="text-xs text-slate-500 mb-2">{user?.email}</p>
+                                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-primary text-[10px] font-bold uppercase tracking-wide border border-blue-100">{user?.role || 'Admin'}</span>
                             </div>
                             <nav className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                                 <a className="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border-l-4 border-primary text-primary font-bold text-xs" href="#general">
@@ -88,26 +180,51 @@ export default function AdminProfilePage() {
                                 </div>
                                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-slate-900">First Name</label>
-                                        <input className="w-full h-9 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary" type="text" defaultValue="Jane" />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-slate-900">Last Name</label>
-                                        <input className="w-full h-9 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary" type="text" defaultValue="Doe" />
+                                        <label className="text-xs font-semibold text-slate-900">Full Name</label>
+                                        <input
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            className="w-full h-9 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary"
+                                            type="text"
+                                        />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-slate-900">Email Address</label>
                                         <div className="relative">
                                             <span className="absolute left-2.5 top-2.5 text-slate-400 text-[14px]"><MdMail /></span>
-                                            <input className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-xs cursor-not-allowed" disabled type="email" defaultValue="jane.doe@Sayan Digital.com" />
+                                            <input
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-xs cursor-not-allowed"
+                                                disabled
+                                                type="email"
+                                            />
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-slate-900">Contact Phone</label>
                                         <div className="relative">
                                             <span className="absolute left-2.5 top-2.5 text-slate-400 text-[14px]"><MdCall /></span>
-                                            <input className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary" type="tel" defaultValue="+1 (555) 019-2834" />
+                                            <input
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                                className="w-full h-9 pl-8 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary"
+                                                type="tel"
+                                            />
                                         </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-slate-900">Address</label>
+                                        <input
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
+                                            className="w-full h-9 rounded-lg border-slate-200 bg-white text-xs focus:ring-primary focus:border-primary"
+                                            type="text"
+                                        />
                                     </div>
                                 </div>
                             </section>

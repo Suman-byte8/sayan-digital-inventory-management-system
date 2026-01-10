@@ -12,7 +12,9 @@ import {
     MdReceiptLong,
     MdCheckCircle,
     MdPersonAdd,
-    MdDownload
+    MdDownload,
+    MdBusiness,
+    MdDesignServices
 } from 'react-icons/md';
 
 import { useState, useEffect, useRef } from 'react';
@@ -165,12 +167,23 @@ export default function InvoicePage() {
                             if (val && (val.includes('lab(') || val.includes('oklch(') || val.includes('oklab('))) {
                                 // Force a safe fallback
                                 if (prop === 'backgroundColor' || prop === 'fill') {
-                                    (el.style as any)[prop] = '#ffffff';
+                                    // If it's the logo background, keep it primary
+                                    if (el.classList.contains('bg-primary')) {
+                                        (el.style as any)[prop] = '#2563eb'; // blue-600
+                                    } else {
+                                        (el.style as any)[prop] = '#ffffff';
+                                    }
                                 } else {
                                     (el.style as any)[prop] = '#334155'; // A nice slate-700 hex
                                 }
                             }
                         });
+
+                        // Ensure SVGs (icons) are visible
+                        if (el.tagName.toLowerCase() === 'svg') {
+                            el.style.color = style.color;
+                            el.style.fill = style.fill;
+                        }
 
                         // Disable transitions/animations
                         el.style.transition = 'none';
@@ -493,45 +506,81 @@ export default function InvoicePage() {
                             <div className="h-1 w-full bg-primary"></div>
                             <div className="p-5 flex-1 flex flex-col">
                                 {/* Invoice Header */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <div className="flex items-center gap-1.5 mb-1">
-                                            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-white">
-                                                <MdPrint className="text-[16px]" />
+                                <div className="flex justify-between items-start mb-8">
+                                    <div className="flex items-start gap-4">
+                                        <div className="relative">
+                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200/50">
+                                                <MdBusiness className="text-[24px]" />
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                                    <MdDesignServices className="text-[12px] text-blue-600" />
+                                                </div>
                                             </div>
-                                            <span className="text-base font-bold tracking-tight text-slate-900">Sayan Digital</span>
                                         </div>
-                                        <p className="text-xs text-slate-500">123 Printing Press Lane<br />New York, NY 10012<br />contact@Sayan Digital.com</p>
+                                        <div>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <span className="text-lg font-black tracking-tight text-slate-900 uppercase">Sayan <span className="text-blue-600">Digital</span></span>
+                                            </div>
+                                            <p className="text-[10px] leading-relaxed text-slate-500 font-medium">
+                                                123 Printing Press Lane<br />
+                                                New York, NY 10012<br />
+                                                <span className="text-blue-600/80">contact@sayandigital.com</span>
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="text-right">
-                                        <h3 className="text-xl font-bold text-slate-900 mb-0.5">INVOICE</h3>
-                                        <p className="text-xs text-primary font-medium">#DRAFT</p>
-                                        <p className="text-xs text-slate-500 mt-0.5">Date: {new Date().toLocaleDateString()}</p>
+                                        <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">INVOICE</h3>
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 mb-2">
+                                            #DRAFT
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 font-bold">Date: {new Date().toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 {/* Bill To Section */}
-                                <div className="mb-6 p-4 bg-slate-50 rounded border border-slate-100 min-h-[100px]">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Bill To</p>
-                                    {selectedCustomer ? (
-                                        <div className="space-y-1.5">
-                                            <h4 className="text-sm font-bold text-slate-900">{selectedCustomer.name}</h4>
-                                            <p className="text-xs text-slate-600">{selectedCustomer.email}</p>
-                                            <p className="text-xs text-slate-600">{selectedCustomer.phone}</p>
-                                            <p className="text-xs text-slate-600 leading-relaxed">{selectedCustomer.address}</p>
+                                <div className="mb-8 grid grid-cols-2 gap-8">
+                                    <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Bill To</p>
+                                        {selectedCustomer ? (
+                                            <div className="space-y-1.5">
+                                                <h4 className="text-sm font-bold text-slate-900">{selectedCustomer.name}</h4>
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[10px] text-slate-600 flex items-center gap-1.5">
+                                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                        {selectedCustomer.email}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-600 flex items-center gap-1.5">
+                                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                        {selectedCustomer.phone}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-600 leading-relaxed mt-1">{selectedCustomer.address}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-400 italic">Select a customer to view details</p>
+                                        )}
+                                    </div>
+                                    <div className="p-4 bg-blue-50/30 rounded-xl border border-blue-100/50 flex flex-col justify-center">
+                                        <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-2">Payment Details</p>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px]">
+                                                <span className="text-slate-500">Status</span>
+                                                <span className="font-bold text-blue-600">Pending</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px]">
+                                                <span className="text-slate-500">Due Date</span>
+                                                <span className="font-bold text-slate-700">{new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <p className="text-xs text-slate-400 italic">Select a customer to view details</p>
-                                    )}
+                                    </div>
                                 </div>
                                 {/* Items Table */}
                                 <div className="overflow-x-auto mb-5">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="border-b border-slate-200">
-                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-1/2">Item Description</th>
-                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Qty</th>
-                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Rate</th>
-                                                <th className="py-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Amount</th>
+                                            <tr className="border-b-2 border-slate-100">
+                                                <th className="py-3 px-2 text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/2">Item Description</th>
+                                                <th className="py-3 px-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                                                <th className="py-3 px-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Rate</th>
+                                                <th className="py-3 px-2 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-xs text-slate-700">
@@ -555,11 +604,23 @@ export default function InvoicePage() {
                                     </table>
                                 </div>
                                 {/* Summary Block */}
-                                <div className="mt-auto flex justify-end">
-                                    <div className="w-full max-w-[200px] space-y-1.5">
-                                        <div className="pt-1.5 border-t border-slate-200 flex justify-between items-center">
-                                            <span className="text-xs font-bold text-slate-900">Grand Total</span>
-                                            <span className="text-sm font-bold text-primary tabular-nums">${grandTotal.toFixed(2)}</span>
+                                <div className="mt-auto pt-8 flex justify-between items-end">
+                                    <div className="max-w-[300px]">
+                                        <p className="text-[10px] font-bold text-slate-900 mb-1">Terms & Conditions</p>
+                                        <p className="text-[9px] text-slate-400 leading-relaxed">
+                                            Please make the payment within 7 days. Thank you for your business!
+                                        </p>
+                                    </div>
+                                    <div className="w-full max-w-[220px]">
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-slate-500">Subtotal</span>
+                                                <span className="font-bold text-slate-700">${subtotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="pt-2 border-t-2 border-blue-600 flex justify-between items-center">
+                                                <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Total Amount</span>
+                                                <span className="text-lg font-black text-blue-600 tabular-nums">${grandTotal.toFixed(2)}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import {
     MdPrint,
     MdDashboard,
@@ -10,11 +11,13 @@ import {
     MdPeople,
     MdBarChart,
     MdSettings,
-    MdDescription
+    MdDescription,
+    MdPerson
 } from 'react-icons/md';
 
 const Sidebar = () => {
     const pathname = usePathname();
+    const { user } = useAuth();
 
     const isActive = (path: string) => pathname === path;
 
@@ -112,7 +115,7 @@ const Sidebar = () => {
                         : 'text-slate-600 hover:bg-slate-50'
                         }`}
                 >
-                    <MdPeople className={`text-[20px] ${isActive('/profile') ? '' : 'group-hover:text-slate-900'}`} />
+                    <MdPerson className={`text-[20px] ${isActive('/profile') ? '' : 'group-hover:text-slate-900'}`} />
                     <span className={`text-sm font-medium ${isActive('/profile') ? '' : 'group-hover:text-slate-900'}`}>Admin Profile</span>
                 </Link>
             </nav>
@@ -130,12 +133,14 @@ const Sidebar = () => {
                 </Link>
                 <div className="mt-4 flex items-center gap-3 px-3">
                     <div
-                        className="size-8 rounded-full bg-slate-200 bg-center bg-cover"
-                        style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCcpqXnVpMIq0FLI-hxWvLQJ_rTYaxhb9mT1KFv6Gpse3Wh_SwRhDMf6UfXzveYQqtKHs4hvIZDxFK_-H9LvzNYI1nv1H3IAkZlDOsPdAwGPHfmLRx4fAJgxu9qJeTOD_GZTgkXneQ54S7ZthN3-v_LdQlhT6vx2fVQoq9VWqMMVD_Bo3aP0eQJsZyrBtOWczR_TlCdwTSGMPtW3_gSSJAqLCGojBANq8KoWBgvXpf-76RHMEORaH272uvt1hdj6QupL6l-ncIX7r8")' }}
-                    ></div>
+                        className="size-8 rounded-full bg-slate-200 bg-center bg-cover flex items-center justify-center overflow-hidden"
+                        style={{ backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none' }}
+                    >
+                        {!user?.avatar && <MdPerson className="text-slate-400 text-lg" />}
+                    </div>
                     <div className="flex flex-col">
-                        <p className="text-xs font-semibold text-slate-900">Jane Doe</p>
-                        <p className="text-[10px] text-slate-500">Manager</p>
+                        <p className="text-xs font-semibold text-slate-900 truncate max-w-[100px]">{user?.name || 'Admin'}</p>
+                        <p className="text-[10px] text-slate-500">{user?.role || 'Manager'}</p>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/ConditionalLayout";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body className={`${inter.className} font-display bg-background-light text-slate-900 antialiased overflow-hidden`}>
-        <ConditionalLayout>{children}</ConditionalLayout>
+        <AuthProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </AuthProvider>
       </body>
     </html>
   );
