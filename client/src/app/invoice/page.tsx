@@ -236,6 +236,12 @@ export default function InvoicePage() {
             return;
         }
 
+        const zeroQuantityItems = items.filter(item => item.quantity <= 0);
+        if (zeroQuantityItems.length > 0) {
+            alert('Please enter a quantity greater than 0 for all items');
+            return;
+        }
+
         setIsGenerating(true);
         try {
             // 1. Create Order
@@ -252,6 +258,7 @@ export default function InvoicePage() {
                 paymentStatus: 'unpaid',
                 notes: 'Generated via Invoice Page'
             };
+            console.log('Sending Order Data:', JSON.stringify(orderData, null, 2));
             const order = await createOrder(orderData);
 
             // 2. Create Invoice
@@ -269,9 +276,17 @@ export default function InvoicePage() {
 
             // Note: Form data is intentionally NOT cleared here so user can continue editing or re-download
             loadData(); // Reload invoices list in background
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error generating invoice:', error);
-            alert('Failed to generate invoice');
+            if (error.response) {
+                console.error('Error Response Data:', error.response.data);
+                console.error('Error Status:', error.response.status);
+            }
+            let errorMessage = 'Failed to generate invoice';
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            alert(errorMessage);
         } finally {
             setIsGenerating(false);
         }
