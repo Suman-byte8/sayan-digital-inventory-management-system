@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/context/AuthContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +21,9 @@ export default function RootLayout({
     <html lang="en" className="light">
       <body className={`${inter.className} font-display bg-background-light text-slate-900 antialiased overflow-hidden`}>
         <AuthProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <SettingsProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </SettingsProvider>
         </AuthProvider>
       </body>
     </html>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import {
     MdPrint,
     MdDashboard,
@@ -18,17 +19,22 @@ import {
 const Sidebar = () => {
     const pathname = usePathname();
     const { user } = useAuth();
+    const { settings } = useSettings();
 
     const isActive = (path: string) => pathname === path;
 
     return (
         <aside className="w-64 flex-shrink-0 flex flex-col bg-surface-light border-r border-slate-200 transition-all duration-300 h-screen">
             <div className="p-6 flex items-center gap-3">
-                <div className="bg-primary/10 flex items-center justify-center rounded-xl size-10 text-primary">
-                    <MdPrint className="text-2xl" />
+                <div className="bg-primary/10 flex items-center justify-center rounded-xl size-10 text-primary overflow-hidden">
+                    {settings?.logoUrl ? (
+                        <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                        <MdPrint className="text-2xl" />
+                    )}
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-base font-bold leading-tight">Sayan Digital</h1>
+                    <h1 className="text-base font-bold leading-tight truncate max-w-[140px]">{settings?.shopName || 'Sayan Digital'}</h1>
                     <p className="text-slate-500 text-xs font-normal">Admin Panel</p>
                 </div>
             </div>

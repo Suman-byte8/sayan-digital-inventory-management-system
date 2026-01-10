@@ -448,3 +448,33 @@ export const updateProfile = async (data: any): Promise<any> => {
         throw error;
     }
 };
+
+export const getSettings = async (): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/settings`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching settings:', error);
+        throw error;
+    }
+};
+
+export const updateSettings = async (data: any): Promise<any> => {
+    try {
+        const token = localStorage.getItem('token');
+        const isFormData = data instanceof FormData;
+        const response = await axios.put(`${API_URL}/settings`, data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': isFormData ? 'multipart/form-data' : 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        throw error;
+    }
+};

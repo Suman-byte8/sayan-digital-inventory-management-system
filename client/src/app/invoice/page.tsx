@@ -21,6 +21,7 @@ import { useState, useEffect, useRef } from 'react';
 import { fetchInvoices, fetchProducts, searchCustomerByPhone, createOrder, createInvoice } from '@/utils/api';
 import { Product } from '@/components/InventoryTable';
 import AddCustomerModal from '@/components/AddCustomerModal';
+import { useSettings } from '@/context/SettingsContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -44,6 +45,9 @@ export default function InvoicePage() {
     const [activeProductSearch, setActiveProductSearch] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const invoiceRef = useRef<HTMLDivElement>(null);
+    const { settings } = useSettings();
+
+    const currencySymbol = settings?.currency === 'INR' ? '₹' : settings?.currency === 'USD' ? '$' : settings?.currency === 'EUR' ? '€' : settings?.currency === 'GBP' ? '£' : '$';
 
     useEffect(() => {
         loadData();
@@ -451,7 +455,7 @@ export default function InvoicePage() {
                                                                     className="w-full text-left px-2 py-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0 text-[10px]"
                                                                 >
                                                                     <div className="font-bold text-slate-900">{prod.name}</div>
-                                                                    <div className="text-slate-500">${prod.sellingPrice}</div>
+                                                                    <div className="text-slate-500">{currencySymbol}{prod.sellingPrice}</div>
                                                                 </button>
                                                             ))}
                                                     </div>
@@ -478,7 +482,7 @@ export default function InvoicePage() {
                                             <div className="col-span-4 text-right">
                                                 <label className="text-[9px] font-medium text-slate-500 block mb-0.5">Total</label>
                                                 <div className="text-xs font-bold text-slate-900 py-1">
-                                                    ${(item.quantity * item.price).toFixed(2)}
+                                                    {currencySymbol}{(item.quantity * item.price).toFixed(2)}
                                                 </div>
                                             </div>
                                         </div>
@@ -509,21 +513,38 @@ export default function InvoicePage() {
                                 <div className="flex justify-between items-start mb-8">
                                     <div className="flex items-start gap-4">
                                         <div className="relative">
-                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200/50">
-                                                <MdBusiness className="text-[24px]" />
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                                    <MdDesignServices className="text-[12px] text-blue-600" />
-                                                </div>
+                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200/50 overflow-hidden">
+                                                {settings?.logoUrl ? (
+                                                    <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <>
+                                                        <MdBusiness className="text-[24px]" />
+                                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                                            <MdDesignServices className="text-[12px] text-blue-600" />
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-1.5 mb-1">
-                                                <span className="text-lg font-black tracking-tight text-slate-900 uppercase">Sayan <span className="text-blue-600">Digital</span></span>
+                                                <span className="text-lg font-black tracking-tight text-slate-900 uppercase">
+                                                    {settings?.shopName ? (
+                                                        <>
+                                                            {settings.shopName.split(' ')[0]} <span className="text-blue-600">{settings.shopName.split(' ').slice(1).join(' ')}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>Sayan <span className="text-blue-600">Digital</span></>
+                                                    )}
+                                                </span>
                                             </div>
                                             <p className="text-[10px] leading-relaxed text-slate-500 font-medium">
-                                                123 Printing Press Lane<br />
-                                                New York, NY 10012<br />
-                                                <span className="text-blue-600/80">contact@sayandigital.com</span>
+                                                {settings?.address ? (
+                                                    settings.address.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)
+                                                ) : (
+                                                    <>123 Printing Press Lane<br />New York, NY 10012<br /></>
+                                                )}
+                                                <span className="text-blue-600/80">{settings?.email || 'contact@sayandigital.com'}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -589,8 +610,8 @@ export default function InvoicePage() {
                                                     <tr key={item.id} className="border-b border-slate-100 last:border-0">
                                                         <td className="py-2 px-2">{item.productName || 'New Item'}</td>
                                                         <td className="py-2 px-2 text-right">{item.quantity}</td>
-                                                        <td className="py-2 px-2 text-right">${item.price.toFixed(2)}</td>
-                                                        <td className="py-2 px-2 text-right font-medium">${(item.quantity * item.price).toFixed(2)}</td>
+                                                        <td className="py-2 px-2 text-right">{currencySymbol}{item.price.toFixed(2)}</td>
+                                                        <td className="py-2 px-2 text-right font-medium">{currencySymbol}{(item.quantity * item.price).toFixed(2)}</td>
                                                     </tr>
                                                 ))
                                             ) : (
@@ -615,11 +636,11 @@ export default function InvoicePage() {
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center text-[10px]">
                                                 <span className="text-slate-500">Subtotal</span>
-                                                <span className="font-bold text-slate-700">${subtotal.toFixed(2)}</span>
+                                                <span className="font-bold text-slate-700">{currencySymbol}{subtotal.toFixed(2)}</span>
                                             </div>
                                             <div className="pt-2 border-t-2 border-blue-600 flex justify-between items-center">
                                                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Total Amount</span>
-                                                <span className="text-lg font-black text-blue-600 tabular-nums">${grandTotal.toFixed(2)}</span>
+                                                <span className="text-lg font-black text-blue-600 tabular-nums">{currencySymbol}{grandTotal.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { fetchOrders, fetchDashboardStats } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
 import { MdCalendarToday, MdNotifications, MdAdd, MdPayments, MdTrendingUp, MdPendingActions, MdWarning, MdPrint, MdShoppingCart, MdInventory, MdPersonAdd } from 'react-icons/md';
+import { useSettings } from '@/context/SettingsContext';
 
 export default function Dashboard() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
@@ -14,6 +15,8 @@ export default function Dashboard() {
     lowStockProducts: 0,
     totalProducts: 0
   });
+  const { settings } = useSettings();
+  const currencySymbol = settings?.currency === 'INR' ? '₹' : settings?.currency === 'USD' ? '$' : settings?.currency === 'EUR' ? '€' : settings?.currency === 'GBP' ? '£' : '$';
 
   useEffect(() => {
     const loadData = async () => {
@@ -68,7 +71,7 @@ export default function Dashboard() {
                 <MdPayments className="text-4xl text-primary" />
               </div>
               <p className="text-gray-500 text-xs font-medium">Total Revenue</p>
-              <p className="text-gray-900 text-xl font-bold tracking-tight">${stats.totalRevenue.toFixed(2)}</p>
+              <p className="text-gray-900 text-xl font-bold tracking-tight">{currencySymbol}{stats.totalRevenue.toFixed(2)}</p>
               <div className="flex items-center gap-1 text-green-600 text-[10px] font-medium">
                 <MdTrendingUp />
                 <span>+0%</span>
@@ -113,7 +116,7 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-[10px]">Last 7 Days Performance</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-gray-900">$0.00</p>
+                  <p className="text-lg font-bold text-gray-900">{currencySymbol}0.00</p>
                   <p className="text-slate-400 text-[10px] font-medium">No data</p>
                 </div>
               </div>
@@ -170,7 +173,7 @@ export default function Dashboard() {
                               {order.status}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-right font-medium">${order.totalAmount?.toFixed(2)}</td>
+                          <td className="px-4 py-2.5 text-right font-medium">{currencySymbol}{order.totalAmount?.toFixed(2)}</td>
                         </tr>
                       ))
                     )}

@@ -11,6 +11,7 @@ import invoiceRoutes from './routes/invoiceRoutes';
 import supplierRoutes from './routes/supplierRoutes';
 import stockMovementRoutes from './routes/stockMovementRoutes';
 import reportRoutes from './routes/reportRoutes';
+import settingsRoutes from './routes/settingsRoutes';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/stock-movements', stockMovementRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
