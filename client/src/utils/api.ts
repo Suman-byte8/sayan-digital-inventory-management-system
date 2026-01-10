@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Product } from '../components/InventoryTable';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Add interceptor to handle 401 errors
 axios.interceptors.response.use(

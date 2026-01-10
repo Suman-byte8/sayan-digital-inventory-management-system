@@ -48,16 +48,22 @@ app.get('/', (req, res) => {
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-    throw new Error('MONGODB_URI is not defined in the environment variables');
+    console.warn('MONGODB_URI is not defined in the environment variables');
+} else {
+    mongoose.connect(MONGODB_URI)
+        .then(() => {
+            console.log('Connected to MongoDB');
+        })
+        .catch((error) => {
+            console.error('Error connecting to MongoDB:', error);
+        });
 }
 
-mongoose.connect(MONGODB_URI)
-    .then(() => {
-        console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    })
-    .catch((error) => {
-        console.error('Error connecting to MongoDB:', error);
+// Only listen if not in a serverless environment (like Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
     });
+}
+
+export default app;
