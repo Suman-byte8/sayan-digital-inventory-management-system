@@ -123,8 +123,59 @@ export const createOrder = async (req: Request, res: Response) => {
 export const updateOrder = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        const { products, status } = req.body;
+
+        const oldOrder = await Order.findById(id);
+        if (!oldOrder) return res.status(404).json({ message: 'Order not found' });
+
+        // If status is changing to cancelled, return all stock
+        if (status === 'cancelled' && oldOrder.status !== 'cancelled') {
+            for (const item of oldOrder.products) {
+                if (item.product) {
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+                }
+            }
+        }
+        // If status was cancelled and is now something else, deduct stock
+        else if (oldOrder.status === 'cancelled' && status && status !== 'cancelled') {
+            for (const item of (products || oldOrder.products)) {
+                if (item.product) {
+                    const product = await Product.findById(item.product);
+                    if (product && product.quantity < item.quantity) {
+                        return res.status(400).json({ message: `Insufficient stock for product: ${product.name}` });
+                    }
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: -item.quantity } });
+                }
+            }
+        }
+        // If products are being updated and status is not cancelled
+        else if (products && status !== 'cancelled') {
+            // Return old stock
+            for (const item of oldOrder.products) {
+                if (item.product) {
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+                }
+            }
+            // Deduct new stock
+            for (const item of products) {
+                if (item.product) {
+                    const product = await Product.findById(item.product);
+                    if (product && product.quantity < item.quantity) {
+                        // Rollback: re-deduct old stock if this fails? 
+                        // For simplicity in this MVP, we'll just error out, but ideally this should be a transaction.
+                        for (const rollbackItem of oldOrder.products) {
+                            if (rollbackItem.product) {
+                                await Product.findByIdAndUpdate(rollbackItem.product, { $inc: { quantity: -rollbackItem.quantity } });
+                            }
+                        }
+                        return res.status(400).json({ message: `Insufficient stock for product: ${product.name}` });
+                    }
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: -item.quantity } });
+                }
+            }
+        }
+
         const order = await Order.findByIdAndUpdate(id, req.body, { new: true });
-        if (!order) return res.status(404).json({ message: 'Order not found' });
         res.json(order);
     } catch (error) {
         res.status(500).json({ message: 'Error updating order', error });

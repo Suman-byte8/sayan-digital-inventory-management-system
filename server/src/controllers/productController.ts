@@ -85,7 +85,8 @@ export const createProduct = async (req: Request, res: Response) => {
             category,
             buyingPrice: parseFloat(buyingPrice) || 0,
             sellingPrice: parseFloat(sellingPrice) || 0,
-            inStock: inStock === 'true',
+            quantity: parseInt(req.body.quantity) || 0,
+            inStock: inStock === 'true' || parseInt(req.body.quantity) > 0,
             imageUrl
         });
         await newProduct.save();
@@ -112,7 +113,8 @@ export const updateProduct = async (req: Request, res: Response) => {
             category,
             buyingPrice: parseFloat(buyingPrice) || 0,
             sellingPrice: parseFloat(sellingPrice) || 0,
-            inStock: inStock === 'true',
+            quantity: parseInt(req.body.quantity) || 0,
+            inStock: inStock === 'true' || parseInt(req.body.quantity) > 0,
         };
 
         const files = (req as any).file;

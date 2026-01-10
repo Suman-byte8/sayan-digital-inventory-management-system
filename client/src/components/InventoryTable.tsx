@@ -8,6 +8,7 @@ export interface Product {
     buyingPrice: number;
     sellingPrice: number;
     inStock: boolean;
+    quantity: number;
     imageUrl?: string;
 }
 
@@ -55,12 +56,19 @@ const InventoryTable = ({ products, onEdit, onDelete }: InventoryTableProps) => 
                                 <td className="px-4 py-2.5 text-xs font-medium text-slate-900 text-right tabular-nums">${product.sellingPrice?.toFixed(2) ?? '0.00'}</td>
                                 <td className="px-4 py-2.5 text-xs text-slate-600 text-center">{product.inStock ? 'In Stock' : 'Out of Stock'}</td>
                                 <td className="px-4 py-2.5 text-center">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${product.inStock
-                                        ? 'bg-green-100 text-green-700 border-green-200'
-                                        : 'bg-red-100 text-red-700 border-red-200'
-                                        }`}>
-                                        {product.inStock ? 'In Stock' : 'Out of Stock'}
-                                    </span>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${product.quantity < 10
+                                            ? 'bg-red-100 text-red-700 border-red-200'
+                                            : product.quantity < 20
+                                                ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                : 'bg-green-100 text-green-700 border-green-200'
+                                            }`}>
+                                            {product.quantity}
+                                        </span>
+                                        <span className={`text-[9px] font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                                            {product.inStock ? 'In Stock' : 'Out of Stock'}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-right">
                                     <div className="flex items-center justify-end gap-1">

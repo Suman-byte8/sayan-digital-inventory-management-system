@@ -17,6 +17,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
         description: '',
         buyingPrice: '',
         sellingPrice: '',
+        quantity: '0',
         inStock: true,
     });
 
@@ -45,6 +46,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
                 description: '',
                 buyingPrice: '',
                 sellingPrice: '',
+                quantity: '0',
                 inStock: true,
             });
             setImageFile(null);
@@ -127,6 +129,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
             data.append('description', formData.description);
             data.append('buyingPrice', formData.buyingPrice);
             data.append('sellingPrice', formData.sellingPrice);
+            data.append('quantity', formData.quantity);
             data.append('inStock', String(formData.inStock));
 
             if (imageFile) {
@@ -318,6 +321,23 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
                                     onChange={handleChange}
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Stock Quantity */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium leading-6 text-slate-900" htmlFor="quantity">Stock Quantity</label>
+                        <div className="relative rounded-lg shadow-sm">
+                            <input
+                                className="block w-full rounded-lg border-0 py-2.5 pl-4 pr-10 text-slate-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                                id="quantity"
+                                name="quantity"
+                                placeholder="0"
+                                type="number"
+                                min="0"
+                                value={formData.quantity}
+                                onChange={handleChange}
+                            />
                         </div>
                     </div>
 
