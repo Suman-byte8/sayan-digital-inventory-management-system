@@ -27,24 +27,37 @@ const whitelist = [
     'https://server-steel-five-62.vercel.app'
 ];
 
-const corsOptions = {
-    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-        if (!origin || whitelist.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-};
+// const corsOptions = {
+//     origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+//         if (!origin || whitelist.indexOf(origin) !== -1) {
+//             callback(null, true);
+//         } else {
+//             callback(new Error('Not allowed by CORS'));
+//         }
+//     },
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true
+// };
 
-app.use(cors(corsOptions));
+//vercel safe
+app.use(
+    cors({
+      origin: [
+        'http://localhost:3000',
+        'https://server-steel-five-62.vercel.app',
+      ],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    })
+  );
+  
+// app.use(cors(corsOptions));
 app.use(express.json());
 
 // Handle OPTIONS requests globally
-app.options('*', cors(corsOptions));
+// app.options('*', cors(corsOptions));
 
 // Routes
 app.use('/api/products', productRoutes);
