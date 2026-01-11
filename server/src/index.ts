@@ -43,6 +43,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Handle OPTIONS requests globally
+app.options('*', cors(corsOptions));
+
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
