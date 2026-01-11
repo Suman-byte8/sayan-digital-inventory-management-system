@@ -23,7 +23,8 @@ const PORT = process.env.PORT || 5000;
 // CORS configuration
 const whitelist = [
     'http://localhost:3000',
-    'https://sayan-digital-inventory-management.vercel.app'
+    'https://sayan-digital-inventory-management.vercel.app',
+    'https://server-steel-five-62.vercel.app'
 ];
 
 const corsOptions = {
