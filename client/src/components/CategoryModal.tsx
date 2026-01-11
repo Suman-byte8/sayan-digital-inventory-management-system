@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MdClose, MdAdd, MdEdit, MdDelete, MdCategory } from 'react-icons/md';
-import { getCategories, createCategory, updateCategory, deleteCategory, Category } from '@/utils/api';
+import { fetchCategories, createCategory, updateCategory, deleteCategory, Category } from '@/utils/api';
 
 interface CategoryModalProps {
     isOpen: boolean;
@@ -24,8 +24,8 @@ export default function CategoryModal({ isOpen, onClose, onCategoryCreated }: Ca
     }, [isOpen]);
 
     const loadCategories = async () => {
-        const data = await getCategories();
-        setCategories(data.filter(c => c.isActive));
+        const data = await fetchCategories();
+        setCategories(data.filter((c: Category) => c.isActive));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -173,7 +173,7 @@ export default function CategoryModal({ isOpen, onClose, onCategoryCreated }: Ca
                                             {category.description && (
                                                 <p className="text-xs text-slate-500 mt-0.5">{category.description}</p>
                                             )}
-                                            <p className="text-[10px] text-slate-400 mt-1">Slug: {category.slug}</p>
+
                                         </div>
 
                                         <div className="flex gap-1 ml-3">
