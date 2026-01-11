@@ -51,7 +51,7 @@ app.use(express.json());
 
 // Route-specific CORS for /api/settings (if settings API needs to accept credentials from localhost only)
 // This ensures strict control over which origin can include credentials to this endpoint.
-app.use('/api/settings', cors({ origin: 'http://localhost:3000', credentials: true, methods: ['GET','POST','PUT','OPTIONS'] }), settingsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Routes
 app.use('/api/products', productRoutes);
