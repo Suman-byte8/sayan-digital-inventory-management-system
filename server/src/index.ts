@@ -13,6 +13,8 @@ import stockMovementRoutes from './routes/stockMovementRoutes';
 import reportRoutes from './routes/reportRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 dotenv.config();
 
 const app = express();
