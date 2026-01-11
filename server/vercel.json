@@ -18,7 +18,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "http://localhost:3000, https://sayan-digital-inventory-management.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",

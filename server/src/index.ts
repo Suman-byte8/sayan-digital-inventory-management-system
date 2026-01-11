@@ -18,22 +18,27 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'https://sayan-digital-inventory-management.vercel.app'
-    ],
+// CORS configuration
+const whitelist = [
+    'http://localhost:3000',
+    'https://sayan-digital-inventory-management.vercel.app'
+];
+
+const corsOptions = {
+    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
-}));
-app.use(express.json());
+};
 
-// Global Request Logger
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-    next();
-});
+app.use(cors(corsOptions));
+app.use(express.json());
 
 // Routes
 app.use('/api/products', productRoutes);
