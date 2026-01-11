@@ -46,7 +46,7 @@ CategorySchema.index({ isActive: 1, name: 1 }); // Compound index for filtered q
 CategorySchema.index({ createdAt: -1 }); // For sorting by recent
 
 // Pre-save hook to auto-generate slug from name
-CategorySchema.pre<ICategory>('save', function () {
+CategorySchema.pre<ICategory>('save', function (this: ICategory) {
     if (this.isModified('name')) {
         this.slug = this.name
             .toLowerCase()

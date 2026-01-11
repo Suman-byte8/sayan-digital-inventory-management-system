@@ -20,64 +20,38 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration
+// CORS configuration: safe dynamic origin callback
 const whitelist = [
     'http://localhost:3000',
     'https://sayan-digital-inventory-management.vercel.app',
     'https://server-steel-five-62.vercel.app'
 ];
 
-// const corsOptions = {
-//     origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-//         if (!origin || whitelist.indexOf(origin) !== -1) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error('Not allowed by CORS'));
-//         }
-//     },
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//     credentials: true
-// };
+const corsOptions = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow non-browser requests (e.g. server-to-server) with no origin
+        if (!origin) return callback(null, true);
+        if (whitelist.indexOf(origin) !== -1) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
 
-//vercel safe
-app.use(
-    cors({
-      origin: [
-        'http://localhost:3000',
-        'https://server-steel-five-62.vercel.app',
-      ],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true,
-    })
-  );
-  
-// app.use(cors(corsOptions));
+// Apply CORS middleware globally with the dynamic callback
+app.use(cors(corsOptions));
+// Ensure express can parse JSON bodies
 app.use(express.json());
 
-// Handle OPTIONS requests globally
-// app.options('*', cors(corsOptions));
+// Global preflight handling is provided by the CORS middleware above.
+// We removed app.options('*', ...) because using '*' caused a path-to-regexp error in this Express/router version.
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header(
-      'Access-Control-Allow-Headers',
-      'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-    );
-    res.header(
-      'Access-Control-Allow-Methods',
-      'GET, POST, PUT, DELETE, OPTIONS'
-    );
-    res.header('Access-Control-Allow-Credentials', 'true');
-  
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-  
-    next();
-  });
-  
+// Route-specific CORS for /api/settings (if settings API needs to accept credentials from localhost only)
+// This ensures strict control over which origin can include credentials to this endpoint.
+app.use('/api/settings', cors({ origin: 'http://localhost:3000', credentials: true, methods: ['GET','POST','PUT','OPTIONS'] }), settingsRoutes);
 
 // Routes
 app.use('/api/products', productRoutes);
@@ -89,7 +63,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/stock-movements', stockMovementRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/settings', settingsRoutes);
+// Note: /api/settings is mounted above with route-specific CORS
 
 // Basic route
 app.get('/', (req, res) => {
