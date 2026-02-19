@@ -13,8 +13,9 @@ if (typeof window !== 'undefined') {
     console.log('  API_URL:', API_URL);
     console.log('  NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     
-    // Check server health
-    axios.get(`${API_URL}/health`)
+    // Check server health - call root-level endpoint
+    const baseServerUrl = API_URL.replace('/api', '') || 'http://localhost:5000';
+    axios.get(`${baseServerUrl}/health`)
         .then(res => {
             console.log('✅ Server Health Check:', res.data);
         })
