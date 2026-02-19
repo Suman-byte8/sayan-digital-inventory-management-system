@@ -24,13 +24,13 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
                 return res.status(403).json({ message: 'Not authorized as an admin' });
             }
 
-            next();
+            return next();
         } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
 
     if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };

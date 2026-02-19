@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { fetchOrders, fetchDashboardStats } from '@/utils/api';
 import NewOrderModal from '@/components/NewOrderModal';
+import { useAuth } from '@/context/AuthContext';
 import { MdCalendarToday, MdNotifications, MdAdd, MdPayments, MdTrendingUp, MdPendingActions, MdWarning, MdPrint, MdShoppingCart, MdInventory, MdPersonAdd } from 'react-icons/md';
 import { useSettings } from '@/context/SettingsContext';
 
 export default function Dashboard() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalRevenue: 0,
     pendingOrders: 0,
@@ -19,6 +21,8 @@ export default function Dashboard() {
   const currencySymbol = settings?.currency === 'INR' ? '₹' : settings?.currency === 'USD' ? '$' : settings?.currency === 'EUR' ? '€' : settings?.currency === 'GBP' ? '£' : '$';
 
   useEffect(() => {
+    if (!user) return; // Only load data if user is authenticated
+    
     const loadData = async () => {
       try {
         const [ordersData, statsData] = await Promise.all([
@@ -32,7 +36,7 @@ export default function Dashboard() {
       }
     };
     loadData();
-  }, []);
+  }, [user]);
 
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden relative">

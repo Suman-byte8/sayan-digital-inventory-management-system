@@ -72,10 +72,6 @@ app.use(cors(corsOptions));
 // Ensure express can parse JSON bodies
 app.use(express.json());
 
-// Route-specific CORS for /api/settings (if settings API needs to accept credentials from localhost only)
-// This ensures strict control over which origin can include credentials to this endpoint.
-app.use('/api/settings', settingsRoutes);
-
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -86,11 +82,16 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/stock-movements', stockMovementRoutes);
 app.use('/api/reports', reportRoutes);
-// Note: /api/settings is mounted above with route-specific CORS
+app.use('/api/settings', settingsRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
     res.send('Inventory Management System API');
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
 // 404 handler - must be last
