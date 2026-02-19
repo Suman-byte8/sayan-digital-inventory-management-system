@@ -11,7 +11,7 @@ export const config = {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS headers
     const allowedOrigins = [
-        'https://inventory-client-sayan-v1.netlify.app',
+        'https://delightful-platypus-0aa7aa.netlify.app',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'https://sayan-digital-inventory-management.vercel.app',
