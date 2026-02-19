@@ -89,7 +89,11 @@ app.get('/', (req, res) => {
     res.send('Inventory Management System API');
 });
 
-// Health check endpoint
+// Health check endpoints (both /health and /api/health for compatibility)
+app.get('/health', (req, res) => {
+    res.json({ status: 'Server is running', timestamp: new Date() });
+});
+
 app.get('/api/health', (req, res) => {
     res.json({ status: 'Server is running', timestamp: new Date() });
 });
@@ -97,21 +101,6 @@ app.get('/api/health', (req, res) => {
 // 404 handler - must be last
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    const mongooseConnected = require('mongoose').connection.readyState === 1;
-    console.log('Health check called - Mongoose state:', require('mongoose').connection.readyState);
-    res.status(200).json({
-        status: 'ok',
-        mongooseConnected: mongooseConnected,
-        mongooseState: require('mongoose').connection.readyState,
-        timestamp: new Date().toISOString(),
-        nodeEnv: process.env.NODE_ENV,
-        dbUri: process.env.MONGODB_URI ? 'configured' : 'NOT CONFIGURED',
-        message: 'Server is running with environment variables loaded'
-    });
 });
 
 // Database connection
