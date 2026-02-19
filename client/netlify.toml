@@ -14,4 +14,4 @@ to = "/index.html"
 status = 200
 
 [context.production.environment]
-NEXT_PUBLIC_API_URL = "https://<YOUR_VERCEL_SERVER_URL>/api"
+NEXT_PUBLIC_API_URL = "https://sayan-inventory-server.vercel.app/api"

@@ -26,7 +26,8 @@ const whitelist = [
     'https://sayan-digital-inventory-management.vercel.app',
     'https://server-steel-five-62.vercel.app',
     'https://sayandigitalstore-inventory.netlify.app',
-    'https://inventory-sayandigital.netlify.app'
+    'https://inventory-sayandigital.netlify.app',
+    'https://inventory-sayandigitalstore.netlify.app'
 ];
 
 // Add runtime-detected client origin (if NEXT_PUBLIC_API_URL is set) so deployments don't require code changes
