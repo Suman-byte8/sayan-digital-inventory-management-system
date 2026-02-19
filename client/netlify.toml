@@ -1,0 +1,17 @@
+[build]
+command = "npm run build"
+
+[build.environment]
+NODE_VERSION = "18"
+NODE_ENV = "production"
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[context.production.environment]
+NEXT_PUBLIC_API_URL = "https://<YOUR_VERCEL_SERVER_URL>/api"
