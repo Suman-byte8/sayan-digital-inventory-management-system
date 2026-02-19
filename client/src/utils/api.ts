@@ -1,16 +1,17 @@
+// @ts-ignore
 import axios from 'axios';
 import { Product } from '../components/InventoryTable';
 
-// Use relative /api path for Netlify proxy, or localhost for development
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Use the server URL from environment variable (works for both dev and production)
+// Next.js makes process.env available on the client side for variables prefixed with NEXT_PUBLIC_
+// @ts-ignore - process.env is available in Next.js
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Log API configuration on startup
 if (typeof window !== 'undefined') {
     console.log('🔧 API Configuration:');
-    console.log('  NODE_ENV:', process.env.NODE_ENV);
     console.log('  API_URL:', API_URL);
+    // @ts-ignore
     console.log('  NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     
     // Check server health - call root-level endpoint
