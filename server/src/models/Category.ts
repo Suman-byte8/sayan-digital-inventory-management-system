@@ -41,9 +41,8 @@ const CategorySchema: Schema = new Schema(
 );
 
 // Indexes for optimal query performance
-CategorySchema.index({ slug: 1 }, { unique: true });
-CategorySchema.index({ isActive: 1, name: 1 }); // Compound index for filtered queries
-CategorySchema.index({ createdAt: -1 }); // For sorting by recent
+CategorySchema.index({ isActive: 1, name: 1 }); 
+CategorySchema.index({ createdAt: -1 });
 
 // Pre-save hook to auto-generate slug from name
 CategorySchema.pre<ICategory>('save', function (this: ICategory) {
