@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import Product from '../models/Product';
+import dbConnect from '../utils/dbConnect';
 
 export const getProducts = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { page = 1, limit = 10, search, category, sort } = req.query;
 
         const query: any = {};
@@ -36,13 +38,19 @@ export const getProducts = async (req: Request, res: Response) => {
             page: Number(page),
             pages: Math.ceil(total / Number(limit))
         });
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching products', error });
+    } catch (error: any) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ 
+            message: 'Error fetching products', 
+            error: error.message || String(error),
+            stack: error.stack
+        });
     }
 };
 
 export const getProductById = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const product = await Product.findById(id);
         if (!product) return res.status(404).json({ message: 'Product not found' });
@@ -57,6 +65,7 @@ import fs from 'fs';
 
 export const createProduct = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { name, description, category, buyingPrice, sellingPrice, inStock } = req.body;
         let imageUrl = '';
 
@@ -112,6 +121,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const { name, description, category, buyingPrice, sellingPrice, inStock } = req.body;
 
@@ -161,6 +171,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 export const deleteProduct = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const deletedProduct = await Product.findByIdAndDelete(id);
         if (!deletedProduct) return res.status(404).json({ message: 'Product not found' });

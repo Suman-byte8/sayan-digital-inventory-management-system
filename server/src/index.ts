@@ -115,14 +115,27 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   console.warn("MONGODB_URI is not defined in the environment variables");
-} else {
-  mongoose
-    .connect(process.env.MONGODB_URI as string, {
-      serverSelectionTimeoutMS: 10000,
-    })
-    .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("Error connecting to MongoDB:", err));
 }
+
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  try {
+    const db = await mongoose.connect(MONGODB_URI as string, {
+      serverSelectionTimeoutMS: 10000,
+      bufferCommands: false,
+    });
+    isConnected = db.connections[0].readyState === 1;
+    console.log("Connected to MongoDB via serverless wrapper");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
+};
+
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 // Only listen if not in a serverless environment (like Vercel)
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
