@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import jwt from 'jsonwebtoken';
+import dbConnect from '../utils/dbConnect';
 
 const generateToken = (id: string) => {
     return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
@@ -12,6 +13,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     try {
+        await dbConnect();
         const user = await User.findOne({ email });
 
         if (user && (await user.comparePassword(password))) {
@@ -33,13 +35,19 @@ export const loginUser = async (req: Request, res: Response) => {
         } else {
             res.status(401).json({ message: 'Invalid email or password (DEBUG)' });
         }
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+    } catch (error: any) {
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            message: 'Server error during login', 
+            error: error.message || String(error),
+            stack: error.stack
+        });
     }
 };
 
 export const getProfile = async (req: any, res: Response) => {
     try {
+        await dbConnect();
         const user = await User.findById(req.user._id).select('-password');
         if (user) {
             res.json(user);
@@ -56,6 +64,7 @@ import fs from 'fs';
 
 export const updateProfile = async (req: any, res: Response) => {
     try {
+        await dbConnect();
         const user = await User.findById(req.user._id);
 
         if (user) {

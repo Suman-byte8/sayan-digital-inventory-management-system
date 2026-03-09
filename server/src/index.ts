@@ -79,6 +79,32 @@ app.use(cors(corsOptions));
 // Ensure express can parse JSON bodies
 app.use(express.json());
 
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.warn("MONGODB_URI is not defined in the environment variables");
+}
+
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  try {
+    const db = await mongoose.connect(MONGODB_URI as string, {
+      serverSelectionTimeoutMS: 10000,
+      bufferCommands: false,
+    });
+    isConnected = db.connections[0].readyState === 1;
+    console.log("Connected to MongoDB via serverless wrapper");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
+};
+
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -110,32 +136,21 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Database connection
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  console.warn("MONGODB_URI is not defined in the environment variables");
-}
-
-let isConnected = false;
-const connectDB = async () => {
-  if (isConnected) return;
-  try {
-    const db = await mongoose.connect(MONGODB_URI as string, {
-      serverSelectionTimeoutMS: 10000,
-      bufferCommands: false,
-    });
-    isConnected = db.connections[0].readyState === 1;
-    console.log("Connected to MongoDB via serverless wrapper");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-  }
-};
-
-app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Global error handler caught:", err);
+  // Ensure CORS headers are present even on errors
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+    error: process.env.NODE_ENV === "production" ? {} : err,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack
+  });
 });
+
+
 
 // Only listen if not in a serverless environment (like Vercel)
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
