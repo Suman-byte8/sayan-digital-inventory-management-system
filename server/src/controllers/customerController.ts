@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import Customer from '../models/Customer';
+import dbConnect from '../utils/dbConnect';
 
 export const getCustomers = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const customers = await Customer.find();
         res.json(customers);
     } catch (error) {
@@ -12,6 +14,7 @@ export const getCustomers = async (req: Request, res: Response) => {
 
 export const getCustomerById = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const customer = await Customer.findById(id);
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
@@ -28,6 +31,7 @@ export const getCustomerById = async (req: Request, res: Response) => {
 
 export const createCustomer = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { name, email, phone, address, company, status } = req.body;
 
         // Check if customer with same phone already exists
@@ -68,6 +72,7 @@ export const createCustomer = async (req: Request, res: Response) => {
 
 export const searchCustomerByPhone = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { phone } = req.query;
         if (!phone) return res.status(400).json({ message: 'Phone number or name is required' });
 
@@ -111,6 +116,7 @@ export const searchCustomerByPhone = async (req: Request, res: Response) => {
 
 export const updateCustomer = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const customer = await Customer.findByIdAndUpdate(id, req.body, { new: true });
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
@@ -122,6 +128,7 @@ export const updateCustomer = async (req: Request, res: Response) => {
 
 export const deleteCustomer = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const customer = await Customer.findByIdAndDelete(id);
         if (!customer) return res.status(404).json({ message: 'Customer not found' });

@@ -2,9 +2,11 @@ import { Request, Response } from 'express';
 import Order from '../models/Order';
 import Product from '../models/Product';
 import StockMovement from '../models/StockMovement';
+import dbConnect from '../utils/dbConnect';
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const totalRevenue = await Order.aggregate([
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]);
@@ -28,6 +30,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
 export const getSalesReport = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { startDate, endDate } = req.query;
 
         const query: any = {};
@@ -44,6 +47,7 @@ export const getSalesReport = async (req: Request, res: Response) => {
 
 export const getInventoryReport = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const inventory = await Product.find().select('name category quantity buyingPrice sellingPrice inStock');
         res.status(200).json(inventory);
     } catch (error) {

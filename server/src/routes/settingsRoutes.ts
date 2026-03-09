@@ -23,7 +23,7 @@ const settingsCors = cors({
             }
         }
         // allow Netlify frontend explicitly as a fallback
-        if (origin === 'https://sayandigitalstore-inventory.netlify.app') return callback(null, true);
+        if (origin === 'https://inventory-sayandigitalstore.netlify.app') return callback(null, true);
         return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,

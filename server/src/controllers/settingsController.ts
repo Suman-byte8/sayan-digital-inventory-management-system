@@ -2,21 +2,29 @@ import { Request, Response } from 'express';
 import Settings from '../models/Settings';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import fs from 'fs';
+import dbConnect from '../utils/dbConnect';
 
 export const getSettings = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         let settings = await Settings.findOne();
         if (!settings) {
             settings = await Settings.create({});
         }
         res.status(200).json(settings);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching settings', error });
+    } catch (error: any) {
+        console.error('Error fetching settings:', error);
+        res.status(500).json({ 
+            message: 'Error fetching settings', 
+            error: error.message || String(error),
+            stack: error.stack
+        });
     }
 };
 
 export const updateSettings = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         let settings = await Settings.findOne();
         if (!settings) {
             settings = new Settings();
@@ -49,11 +57,16 @@ export const updateSettings = async (req: Request, res: Response) => {
 
         await settings.save();
         res.status(200).json(settings);
-    } catch (error) {
+    } catch (error: any) {
         // Clean up file if it exists and error occurred
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
-        res.status(500).json({ message: 'Error updating settings', error });
+        console.error('Error updating settings:', error);
+        res.status(500).json({ 
+            message: 'Error updating settings', 
+            error: error.message || String(error),
+            stack: error.stack
+        });
     }
 };

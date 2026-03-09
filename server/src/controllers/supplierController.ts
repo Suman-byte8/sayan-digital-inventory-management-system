@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import Supplier from '../models/Supplier';
+import dbConnect from '../utils/dbConnect';
 
 export const getSuppliers = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const suppliers = await Supplier.find();
         res.status(200).json(suppliers);
     } catch (error) {
@@ -12,6 +14,7 @@ export const getSuppliers = async (req: Request, res: Response) => {
 
 export const getSupplierById = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const supplier = await Supplier.findById(id);
         if (!supplier) return res.status(404).json({ message: 'Supplier not found' });
@@ -23,6 +26,7 @@ export const getSupplierById = async (req: Request, res: Response) => {
 
 export const createSupplier = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const newSupplier = new Supplier(req.body);
         await newSupplier.save();
         res.status(201).json(newSupplier);
@@ -33,6 +37,7 @@ export const createSupplier = async (req: Request, res: Response) => {
 
 export const updateSupplier = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const updatedSupplier = await Supplier.findByIdAndUpdate(id, req.body, { new: true });
         if (!updatedSupplier) return res.status(404).json({ message: 'Supplier not found' });
@@ -44,6 +49,7 @@ export const updateSupplier = async (req: Request, res: Response) => {
 
 export const deleteSupplier = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const deletedSupplier = await Supplier.findByIdAndDelete(id);
         if (!deletedSupplier) return res.status(404).json({ message: 'Supplier not found' });

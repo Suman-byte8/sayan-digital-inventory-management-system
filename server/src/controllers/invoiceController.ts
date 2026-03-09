@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import Invoice from '../models/Invoice';
+import dbConnect from '../utils/dbConnect';
 
 export const getInvoices = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const invoices = await Invoice.find().populate('order');
         res.json(invoices);
     } catch (error) {
@@ -12,6 +14,7 @@ export const getInvoices = async (req: Request, res: Response) => {
 
 export const createInvoice = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { order, amount, dueDate } = req.body;
         const invoice = new Invoice({ order, amount, dueDate });
         await invoice.save();
@@ -23,6 +26,7 @@ export const createInvoice = async (req: Request, res: Response) => {
 
 export const updateInvoice = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const invoice = await Invoice.findByIdAndUpdate(id, req.body, { new: true });
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
@@ -34,6 +38,7 @@ export const updateInvoice = async (req: Request, res: Response) => {
 
 export const deleteInvoice = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const invoice = await Invoice.findByIdAndDelete(id);
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });

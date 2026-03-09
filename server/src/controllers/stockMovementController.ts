@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import StockMovement from '../models/StockMovement';
 import Product from '../models/Product';
+import dbConnect from '../utils/dbConnect';
 
 export const getStockMovements = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const movements = await StockMovement.find().populate('product', 'name');
         res.status(200).json(movements);
     } catch (error) {
@@ -13,6 +15,7 @@ export const getStockMovements = async (req: Request, res: Response) => {
 
 export const createStockMovement = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { product, type, quantity, reason, reference } = req.body;
 
         // Update product stock

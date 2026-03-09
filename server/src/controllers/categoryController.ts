@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import Category from '../models/Category';
+import dbConnect from '../utils/dbConnect';
 
 // Create a new category
 export const createCategory = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { name, description } = req.body;
 
         // Check if category already exists
@@ -42,6 +44,7 @@ export const createCategory = async (req: Request, res: Response) => {
 // Get all categories
 export const getAllCategories = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { includeInactive } = req.query;
 
         const filter = includeInactive === 'true' ? {} : { isActive: true };
@@ -67,6 +70,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 // Get category by ID
 export const getCategoryById = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
 
         const category = await Category.findById(id).select('-__v');
@@ -94,6 +98,7 @@ export const getCategoryById = async (req: Request, res: Response) => {
 // Update category
 export const updateCategory = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const { name, description, isActive } = req.body;
 
@@ -141,6 +146,7 @@ export const updateCategory = async (req: Request, res: Response) => {
 // Delete category (soft delete)
 export const deleteCategory = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
 
         const category = await Category.findByIdAndUpdate(

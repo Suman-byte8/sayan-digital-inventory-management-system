@@ -2,9 +2,11 @@ import { Request, Response } from 'express';
 import Order from '../models/Order';
 import Customer from '../models/Customer';
 import Product from '../models/Product';
+import dbConnect from '../utils/dbConnect';
 
 export const getOrders = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const {
             page = 1,
             limit = 10,
@@ -75,6 +77,7 @@ export const getOrders = async (req: Request, res: Response) => {
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         console.log('Incoming Order Request:', JSON.stringify(req.body, null, 2));
         const { customer, products, totalAmount, status, paymentStatus, notes } = req.body;
 
@@ -122,6 +125,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
 export const updateOrder = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const { products, status } = req.body;
 
@@ -184,6 +188,7 @@ export const updateOrder = async (req: Request, res: Response) => {
 
 export const deleteOrder = async (req: Request, res: Response) => {
     try {
+        await dbConnect();
         const { id } = req.params;
         const order = await Order.findByIdAndDelete(id);
         if (!order) return res.status(404).json({ message: 'Order not found' });
