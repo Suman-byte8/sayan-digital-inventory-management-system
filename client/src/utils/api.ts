@@ -567,7 +567,7 @@ export const updateProfile = async (data: any): Promise<any> => {
         const response = await axios.put(`${API_URL}/auth/profile`, data, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': isFormData ? 'multipart/form-data' : 'application/json'
+                ...(data instanceof FormData ? {} : { 'Content-Type': 'application/json' })
             }
         });
         return response.data;
@@ -597,7 +597,7 @@ export const updateSettings = async (data: any): Promise<any> => {
         const response = await axios.put(`${API_URL}/settings`, data, {
             headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': isFormData ? 'multipart/form-data' : 'application/json'
+                ...(data instanceof FormData ? {} : { 'Content-Type': 'application/json' })
             }
         });
         return response.data;

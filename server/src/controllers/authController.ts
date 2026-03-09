@@ -59,7 +59,7 @@ export const getProfile = async (req: any, res: Response) => {
     }
 };
 
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 import fs from 'fs';
 
 export const updateProfile = async (req: any, res: Response) => {
@@ -77,10 +77,25 @@ export const updateProfile = async (req: any, res: Response) => {
             const file = req.file;
             if (file) {
                 try {
-                    const imageUrl = await uploadToCloudinary(file.path);
+                    // Delete old avatar if it exists
+                    if (user.avatar) {
+                        await deleteFromCloudinary(user.avatar);
+                    }
+
+                    // Use buffer if available (memoryStorage), otherwise use path
+                    let imageUrl = '';
+                    if (file.buffer) {
+                        imageUrl = await uploadToCloudinary(file.buffer);
+                    } else if (file.path) {
+                        imageUrl = await uploadToCloudinary(file.path);
+                    }
+                    
                     user.avatar = imageUrl;
-                    // Clean up local file after upload
-                    fs.unlinkSync(file.path);
+
+                    // Clean up local file after upload only if path-based
+                    if (file.path && fs.existsSync(file.path)) {
+                        fs.unlinkSync(file.path);
+                    }
                 } catch (uploadError) {
                     console.error('Error uploading avatar:', uploadError);
                 }

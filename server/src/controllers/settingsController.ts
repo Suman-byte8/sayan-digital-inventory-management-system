@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Settings from '../models/Settings';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 import fs from 'fs';
 import dbConnect from '../utils/dbConnect';
 
@@ -43,10 +43,25 @@ export const updateSettings = async (req: Request, res: Response) => {
         const file = req.file;
         if (file) {
             try {
-                const imageUrl = await uploadToCloudinary(file.path);
+                // Delete old logo if it exists
+                if (settings.logoUrl) {
+                    await deleteFromCloudinary(settings.logoUrl);
+                }
+
+                // Use buffer if available (memoryStorage), otherwise use path
+                let imageUrl = '';
+                if (file.buffer) {
+                    imageUrl = await uploadToCloudinary(file.buffer);
+                } else if (file.path) {
+                    imageUrl = await uploadToCloudinary(file.path);
+                }
+                
                 settings.logoUrl = imageUrl;
-                // Clean up local file after upload
-                fs.unlinkSync(file.path);
+                
+                // Clean up local file after upload only if path-based
+                if (file.path && fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
             } catch (uploadError) {
                 console.error('Error uploading logo:', uploadError);
             }

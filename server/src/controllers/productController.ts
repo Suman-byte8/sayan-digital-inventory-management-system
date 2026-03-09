@@ -60,7 +60,7 @@ export const getProductById = async (req: Request, res: Response) => {
     }
 };
 
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 import fs from 'fs';
 
 export const createProduct = async (req: Request, res: Response) => {
@@ -138,6 +138,12 @@ export const updateProduct = async (req: Request, res: Response) => {
         const file = (req as any).file;
         if (file) {
             try {
+                // Delete old image if it exists
+                const product = await Product.findById(id);
+                if (product && product.imageUrl) {
+                    await deleteFromCloudinary(product.imageUrl);
+                }
+
                 // Use buffer if available (memoryStorage), otherwise use path
                 let imageUrl = '';
                 if (file.buffer) {
@@ -173,6 +179,13 @@ export const deleteProduct = async (req: Request, res: Response) => {
     try {
         await dbConnect();
         const { id } = req.params;
+        
+        // Delete image from Cloudinary if it exists
+        const product = await Product.findById(id);
+        if (product && product.imageUrl) {
+            await deleteFromCloudinary(product.imageUrl);
+        }
+
         const deletedProduct = await Product.findByIdAndDelete(id);
         if (!deletedProduct) return res.status(404).json({ message: 'Product not found' });
         res.status(200).json({ message: 'Product deleted successfully' });
