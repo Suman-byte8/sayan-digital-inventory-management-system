@@ -10,4 +10,4 @@ NODE_ENV = "production"
 package = "@netlify/plugin-nextjs"
 
 [context.production.environment]
-NEXT_PUBLIC_API_URL = "https://sayan-inventory-server.vercel.app/api"
+NEXT_PUBLIC_API_URL = "https://inventory-backend-sayan.vercel.app/api"
